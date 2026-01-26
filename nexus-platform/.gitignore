@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.log
+tmp/
+
+# Node/Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.env
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Data
+data/
+dist/
+
+# Build Artifacts
+build/
+bin/
+*.spec

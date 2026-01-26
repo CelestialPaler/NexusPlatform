@@ -1,0 +1,10 @@
+{
+    "app": "1.5.0",
+    "tools": {
+        "iperf": "1.0.0",
+        "ping": "1.1.0",
+        "advanced-ping": "0.9.1",
+        "automation": "1.1.0",
+        "wireless-capture": "1.0.0"
+    }
+}

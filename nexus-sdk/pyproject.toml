@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nexus-sdk"
+version = "0.1.0"
+description = "Software Development Kit for Nexus Platform Plugin Development"
+readme = "README.md"
+authors = [
+  { name = "Nexus Team", email = "dev@nexus.local" },
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic>=2.0.0",
+    "pandas>=1.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nexus_sdk"]

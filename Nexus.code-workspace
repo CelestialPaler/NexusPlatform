@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"name": "🚀 Nexus Platform (Host)",
+			"path": "nexus-platform"
+		},
+		{
+			"name": "📦 Nexus SDK (Standard)",
+			"path": "nexus-sdk"
+		},
+		{
+			"name": "🧠 Nexus Core (Logic)",
+			"path": "nexus-core"
+		}
+	],
+	"settings": {
+		"python.analysis.extraPaths": [
+			"./nexus-sdk/src",
+			"./nexus-core/src"
+		],
+		"files.exclude": {
+			"**/__pycache__": true,
+			"**/*.egg-info": true
+		}
+	}
+}

@@ -1,0 +1,11 @@
+pywebview
+scapy
+pandas
+plotly
+pygetwindow
+pynput
+pyautogui
+pydirectinput
+pywin32
+paramiko
+pyinstaller
