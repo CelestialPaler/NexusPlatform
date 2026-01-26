@@ -100,21 +100,76 @@ class Api:
         else:
             logging.info(f"[{source}] {message}")
 
-        # 2. If source is internal (e.g. Blueprint), push to Frontend Console
-        if source != "Frontend":
-            try:
-                # Iterate all active windows
-                safe_msg = str(message).replace("'", "\\'").replace("\n", " ")
-                js = f"console.log('%c[{source}]', 'color: cyan; font-weight: bold;', '{safe_msg}');"
-                
-                # Check directly in window manager
-                if hasattr(self, '_window_manager'):
-                    for win in self._window_manager.windows:
-                        win.evaluate_js(js)
-            except Exception as e:
-                logging.error(f"Failed to push log to frontend: {e}")
+        # 2. Push to Frontend via Window Event (for Log Console UI)
+        try:
+            # We use a custom window dispatch function effectively
+            safe_msg = str(message).replace("'", "\\'").replace("\n", " ").replace('"', '\\"')
+            js_code = f"""
+                if (window.handleBackendLog) {{
+                    window.handleBackendLog('{level}', '{safe_msg}', '{source}');
+                }}
+            """
+            if hasattr(self, '_window_manager'):
+                for win in self._window_manager.windows:
+                     win.evaluate_js(js_code)
+        except Exception as e:
+            logging.error(f"Push Log Error: {e}")
                 
         return True
+    
+    # --- Blueprint File IO ---
+    
+    def blueprint_save(self, name, data_json):
+        """Save Blueprint JSON to disk"""
+        try:
+            # Ensure safe path
+            save_dir = os.path.join(self.base_dir, 'data', 'blueprints')
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+                
+            safe_name = "".join([c for c in name if c.isalnum() or c in (' ', '-', '_')]).strip()
+            if not safe_name: safe_name = "Untitled"
+            
+            filepath = os.path.join(save_dir, f"{safe_name}.json")
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                # json.dump not imported, using simple string write if data is dict?
+                import json
+                if isinstance(data_json, str):
+                    f.write(data_json)
+                else:
+                    json.dump(data_json, f, indent=2)
+            
+            return {"status": "success", "path": filepath}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def blueprint_load_list(self):
+        """List all saved blueprints"""
+        try:
+            save_dir = os.path.join(self.base_dir, 'data', 'blueprints')
+            if not os.path.exists(save_dir): return []
+            
+            files = [f.replace('.json', '') for f in os.listdir(save_dir) if f.endswith('.json')]
+            return files
+        except:
+            return []
+            
+    def blueprint_load(self, name):
+        """Load a blueprint"""
+        try:
+            save_dir = os.path.join(self.base_dir, 'data', 'blueprints')
+            filepath = os.path.join(save_dir, f"{name}.json")
+            
+            if not os.path.exists(filepath):
+                return {"status": "error", "message": "File not found"}
+                
+            import json
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return {"status": "success", "data": data}
+        except Exception as e:
+             return {"status": "error", "message": str(e)}
 
     def open_tool_window(self, tool_id):
         """Open a specific tool in a new independent window."""
