@@ -5,8 +5,8 @@ import webview
 import logging
 from flask import Flask
 from backend.managers.automation import AutomationManager
-from backend.managers.ba import BaManager
-from backend.managers.rtp import RtpManager
+# from backend.managers.ba import BaManager
+# from backend.managers.rtp import RtpManager
 from backend.managers.ping import PingManager
 import os
 
@@ -18,8 +18,8 @@ class NexusAPI:
     def __init__(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.automation = AutomationManager()
-        self.ba_manager = BaManager(base_dir)
-        self.rtp_manager = RtpManager(base_dir)
+        # self.ba_manager = BaManager(base_dir)
+        # self.rtp_manager = RtpManager(base_dir)
         self.ping_manager = PingManager(base_dir)
         self._window = None
 

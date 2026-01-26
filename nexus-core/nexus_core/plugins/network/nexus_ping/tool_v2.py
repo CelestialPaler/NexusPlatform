@@ -4,13 +4,31 @@ import json
 import time
 import re
 import logging
-from backend.managers.base import BaseManager
+from nexus_core.interfaces import ITool
 
-class PingManager(BaseManager):
+class PingTool(ITool):
     def __init__(self, base_dir):
         super().__init__(base_dir)
         self.ping_processes = {}
         self.ping_threads = {}
+
+    def get_metadata(self):
+        return {
+            "name": "Ping",
+            "id": "nexus.network.ping",
+            "version": "2.0",
+            "category": "Network",
+            "description": "Send ICMP Echo Requests to network hosts",
+            "inputs": {
+                "host": {"type": "string", "default": "8.8.8.8", "label": "Target IP/Domain"},
+                "count": {"type": "number", "default": 0, "label": "Count (0=Infinite)"},
+                "interval": {"type": "number", "default": 1, "label": "Interval (s)"},
+                "size": {"type": "number", "default": 32, "label": "Packet Size (bytes)"}
+            },
+            "outputs": {
+                "events": ["ping-log", "ping-data", "ping-done", "ping-error"]
+            }
+        }
 
     def stop(self, instance_id):
         """Stop the running Ping process."""
@@ -22,7 +40,7 @@ class PingManager(BaseManager):
                 return {"status": "error", "message": str(e)}
         return {"status": "no_process"}
 
-    def run(self, config):
+    def run(self, config, callback=None):
         """Run Ping with the given configuration."""
         logging.info(f"PingManager.run called with {config}")
         instance_id = config.get('id')
@@ -86,8 +104,8 @@ class PingManager(BaseManager):
                     if not line: break
                     
                     # Send raw log
-                    # self.send_to_js(f"window.dispatchEvent(new CustomEvent('ping-log', {{ detail: {{ id: '{instance_id}', data: {json.dumps(line.strip())} }} }}))")
-                    self.send_to_js({'type': 'ping-log', 'detail': {'id': instance_id, 'data': line.strip()}})
+                    if callback:
+                        callback('ping-log', {'id': instance_id, 'data': line.strip()})
                     
                     # Parse for chart
                     match = re.search(regex, line)
@@ -97,8 +115,8 @@ class PingManager(BaseManager):
                             "timestamp": time.strftime('%H:%M:%S'),
                             "latency": latency
                         }
-                        # self.send_to_js(f"window.dispatchEvent(new CustomEvent('ping-data', {{ detail: {{ id: '{instance_id}', data: {json.dumps(data_point)} }} }}))")
-                        self.send_to_js({'type': 'ping-data', 'detail': {'id': instance_id, 'data': data_point}})
+                        if callback:
+                            callback('ping-data', {'id': instance_id, 'data': data_point})
                     elif "Request timed out" in line or "Destination host unreachable" in line:
                          # Handle packet loss/timeout
                          data_point = {
@@ -106,8 +124,8 @@ class PingManager(BaseManager):
                             "latency": None, # Indicate loss
                             "error": "timeout"
                         }
-                         # self.send_to_js(f"window.dispatchEvent(new CustomEvent('ping-data', {{ detail: {{ id: '{instance_id}', data: {json.dumps(data_point)} }} }}))")
-                         self.send_to_js({'type': 'ping-data', 'detail': {'id': instance_id, 'data': data_point}})
+                         if callback:
+                            callback('ping-data', {'id': instance_id, 'data': data_point})
                     
                     # Yield to avoid blocking UI
                     time.sleep(0.05)
@@ -116,12 +134,12 @@ class PingManager(BaseManager):
                 if instance_id in self.ping_processes:
                     del self.ping_processes[instance_id]
 
-                # self.send_to_js(f"window.dispatchEvent(new CustomEvent('ping-done', {{ detail: {{ id: '{instance_id}' }} }}))")
-                self.send_to_js({'type': 'ping-done', 'detail': {'id': instance_id}})
+                if callback:
+                    callback('ping-done', {'id': instance_id})
 
             except Exception as e:
-                # self.send_to_js(f"window.dispatchEvent(new CustomEvent('ping-error', {{ detail: {{ id: '{instance_id}', data: {json.dumps(str(e))} }} }}))")
-                self.send_to_js({'type': 'ping-error', 'detail': {'id': instance_id, 'data': str(e)}})
+                if callback:
+                    callback('ping-error', {'id': instance_id, 'data': str(e)})
                 if instance_id in self.ping_processes:
                     del self.ping_processes[instance_id]
 

@@ -4,11 +4,11 @@ import threading
 import json
 import time
 import re
-from backend.managers.base import BaseManager
 
-class IperfManager(BaseManager):
+class IperfTool:
     def __init__(self, base_dir):
-        super().__init__(base_dir)
+        # We keep base_dir to locate the binary tools
+        self.base_dir = base_dir
         self.iperf_processes = {}
         self.iperf_threads = {}
 
@@ -32,8 +32,11 @@ class IperfManager(BaseManager):
                 return {"status": "error", "message": str(e)}
         return {"status": "no_process"}
 
-    def run(self, config):
-        """Run iPerf with the given configuration."""
+    def run(self, config, callback=None):
+        """
+        Run iPerf with the given configuration.
+        callback: function(event_type, payload)
+        """
         instance_id = config.get('id')
         if not instance_id:
              return {"status": "error", "message": "Instance ID required"}
@@ -102,8 +105,8 @@ class IperfManager(BaseManager):
                 for line in iter(process.stdout.readline, ''):
                     if not line: break
                     # Send raw log
-                    # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-log', {{ detail: {{ id: '{instance_id}', data: {json.dumps(line.strip())} }} }}))")
-                    self.send_to_js({'type': 'iperf-log', 'detail': {'id': instance_id, 'data': line.strip()}})
+                    if callback:
+                        callback('iperf-log', {'id': instance_id, 'data': line.strip()})
                     
                     # Parse for chart
                     match = re.search(regex, line)
@@ -127,8 +130,8 @@ class IperfManager(BaseManager):
                             "bandwidth": bw_val
                         }
                         results.append(data_point)
-                        # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-data', {{ detail: {{ id: '{instance_id}', data: {json.dumps(data_point)} }} }}))")
-                        self.send_to_js({'type': 'iperf-data', 'detail': {'id': instance_id, 'data': data_point}})
+                        if callback:
+                            callback('iperf-data', {'id': instance_id, 'data': data_point})
                     
                     # Removed time.sleep(0.05) to improve real-time performance
 
@@ -147,18 +150,18 @@ class IperfManager(BaseManager):
                     with open(filepath, 'w') as f:
                         json.dump(results, f, indent=2)
                     
-                    # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-log', {{ detail: {{ id: '{instance_id}', data: 'Results saved to {filename}' }} }}))")
-                    self.send_to_js({'type': 'iperf-log', 'detail': {'id': instance_id, 'data': f'Results saved to {filename}'}})
+                    if callback:
+                        callback('iperf-log', {'id': instance_id, 'data': f'Results saved to {filename}'})
                 except Exception as e:
-                    # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-log', {{ detail: {{ id: '{instance_id}', data: 'Error saving results: {str(e)}' }} }}))")
-                    self.send_to_js({'type': 'iperf-log', 'detail': {'id': instance_id, 'data': f'Error saving results: {str(e)}'}})
+                    if callback:
+                        callback('iperf-log', {'id': instance_id, 'data': f'Error saving results: {str(e)}'})
 
-                # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-done', {{ detail: {{ id: '{instance_id}' }} }}))")
-                self.send_to_js({'type': 'iperf-done', 'detail': {'id': instance_id}})
+                if callback:
+                    callback('iperf-done', {'id': instance_id})
 
             except Exception as e:
-                # self.send_to_js(f"window.dispatchEvent(new CustomEvent('iperf-error', {{ detail: {{ id: '{instance_id}', data: {json.dumps(str(e))} }} }}))")
-                self.send_to_js({'type': 'iperf-error', 'detail': {'id': instance_id, 'data': str(e)}})
+                if callback:
+                    callback('iperf-error', {'id': instance_id, 'data': str(e)})
                 if instance_id in self.iperf_processes:
                     del self.iperf_processes[instance_id]
 

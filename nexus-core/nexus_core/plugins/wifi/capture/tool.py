@@ -1,4 +1,3 @@
-from backend.managers.base import BaseManager
 import logging
 import threading
 import subprocess
@@ -10,12 +9,12 @@ from datetime import datetime
 
 import json
 
-class WirelessCaptureManager(BaseManager):
+class WirelessCaptureTool:
     def __init__(self, base_dir):
-        # Set specific logger before calling super to ensure it's available
+        # Set specific logger
         self.logger = logging.getLogger("WirelessCapture")
-        self.logger.info(f"LOADING WirelessCaptureManager from: {__file__}") # DEBUG PRINT
-        super().__init__(base_dir)
+        self.logger.info(f"LOADING WirelessCaptureTool from: {__file__}")
+        self.base_dir = base_dir
         
         self.capture_process = None
         self.capture_thread = None

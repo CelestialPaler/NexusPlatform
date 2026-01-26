@@ -55,8 +55,8 @@ from backend.managers.settings import SettingsManager
 from backend.managers.iperf import IperfManager
 from backend.managers.ping import PingManager
 from backend.managers.version import VersionManager
-from backend.managers.rtp import RtpManager
-from backend.managers.ba import BaManager
+# from backend.managers.rtp import RtpManager
+# from backend.managers.ba import BaManager
 from backend.managers.automation import AutomationManager
 from backend.managers.wireless_capture import WirelessCaptureManager
 
@@ -79,8 +79,8 @@ class Api:
         self._iperf_manager = IperfManager(self.base_dir)
         self._ping_manager = PingManager(self.base_dir)
         self._version_manager = VersionManager(self.base_dir)
-        self._rtp_manager = RtpManager(self.base_dir)
-        self._ba_manager = BaManager(self.base_dir)
+        # self._rtp_manager = RtpManager(self.base_dir)
+        # self._ba_manager = BaManager(self.base_dir)
         self._automation_manager = AutomationManager(self.base_dir)
         self._wireless_capture_manager = WirelessCaptureManager(self.base_dir)
 
@@ -226,20 +226,26 @@ class Api:
 
     # --- RTP Analysis ---
     def list_pcap_files(self):
-        return self._rtp_manager.list_files()
+        # return self._rtp_manager.list_files()
+        return []
 
     def detect_rtp_flow(self, filename):
-        return self._rtp_manager.auto_detect_flow(filename)
+        # return self._rtp_manager.auto_detect_flow(filename)
+        return []
 
     def analyze_rtp(self, filename, sport, dport):
-        return self._rtp_manager.analyze({"filename": filename, "sport": sport, "dport": dport})
+        # return self._rtp_manager.analyze({"filename": filename, "sport": sport, "dport": dport})
+        return {}
 
     # --- BA Analysis ---
     def detect_ba_flow(self, filename):
-        return self._ba_manager.auto_detect_ba_flows(filename)
+        # return self._ba_manager.auto_detect_ba_flows(filename)
+        return []
 
     def analyze_ba(self, filename, sa, da, tid):
-        return self._ba_manager.analyze_ba(filename, sa, da, tid)
+        # return self._ba_manager.analyze_ba(filename, sa, da, tid)
+        return {}
+
 
     # --- Automation ---
     def get_windows(self):
@@ -357,7 +363,8 @@ class Api:
     # --- QoS / BlockAck Analysis ---
     def ba_detect_flows(self, filename):
         """Auto-detect QoS/BA flows in a pcap file."""
-        return self._ba_manager.auto_detect_ba_flows(filename)
+        # return self._ba_manager.auto_detect_ba_flows(filename)
+        return []
 
     def ba_browse_file(self):
         """Open a file dialog to select a pcap file."""
@@ -373,7 +380,8 @@ class Api:
 
     def ba_analyze_ba(self, filename, sa, da, tid):
         """Analyze a specific flow (SA->DA, TID)."""
-        return self._ba_manager.analyze_ba(filename, sa, da, tid)
+        # return self._ba_manager.analyze_ba(filename, sa, da, tid)
+        return {}
         
     def ba_get_files(self):
         """List available pcap files."""
