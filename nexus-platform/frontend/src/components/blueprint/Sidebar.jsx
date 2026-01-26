@@ -28,6 +28,14 @@ const Sidebar = () => {
         { label: '延迟等待', type: 'delay', data: { type: 'delay', label: 'Delay', inputs: [{id: 'in', type: 'flow'}], outputs: [{id: 'out', type: 'flow'}] } },
         { label: '条件分支', type: 'condition', data: { type: 'condition', label: 'If/Else', inputs: [{id: 'in', type: 'flow'}, {id: 'cond', type: 'boolean', label: 'Cond'}], outputs: [{id: 'true', type: 'flow', label: 'True'}, {id: 'false', type: 'flow', label: 'False'}] } },
       ]
+    },
+    {
+      category: 'Variables (变量)',
+      items: [
+        { label: 'String (字符串)', type: 'string', data: { type: 'string', label: 'String', widget: 'text', value: '192.168.1.1', outputs: [{id: 'val', type: 'string', label: 'Value'}] } },
+        { label: 'Integer (整数)', type: 'number', data: { type: 'number', label: 'Integer', widget: 'number', value: 0, outputs: [{id: 'val', type: 'number', label: 'Value'}] } },
+        { label: 'Boolean (布尔)', type: 'boolean', data: { type: 'boolean', label: 'Boolean', widget: 'boolean', value: false, outputs: [{id: 'val', type: 'boolean', label: 'Value'}] } },
+      ]
     }
   ];
 
