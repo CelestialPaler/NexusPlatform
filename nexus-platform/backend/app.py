@@ -92,12 +92,28 @@ class Api:
 
     def log_message(self, level, message, source="Frontend"):
         """Log a message from the frontend."""
+        # 1. Write to Python File/Console Log
         if level.lower() == 'error':
             logging.error(f"[{source}] {message}")
         elif level.lower() == 'warn':
             logging.warning(f"[{source}] {message}")
         else:
             logging.info(f"[{source}] {message}")
+
+        # 2. If source is internal (e.g. Blueprint), push to Frontend Console
+        if source != "Frontend":
+            try:
+                # Iterate all active windows
+                safe_msg = str(message).replace("'", "\\'").replace("\n", " ")
+                js = f"console.log('%c[{source}]', 'color: cyan; font-weight: bold;', '{safe_msg}');"
+                
+                # Check directly in window manager
+                if hasattr(self, '_window_manager'):
+                    for win in self._window_manager.windows:
+                        win.evaluate_js(js)
+            except Exception as e:
+                logging.error(f"Failed to push log to frontend: {e}")
+                
         return True
 
     def open_tool_window(self, tool_id):
