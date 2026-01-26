@@ -1,0 +1,8 @@
+plugin_id: "nexus.tools.ping"
+name: "Ping Connectivity Tool"
+version: "1.0.0"
+description: "Basic network connectivity checker using system ping."
+author: "Nexus Team"
+category: "Network"
+entry_point: "ping_tool:check_connectivity"
+dependencies: []
