@@ -13,8 +13,8 @@ class MockApi:
     def __init__(self):
         self.logs = []
     
-    def log_message(self, message, level="info"):
-        print(f"[MOCK-API] {level}: {message}")
+    def log_message(self, level, message, source="test"):
+        print(f"[MOCK-API] {level}: {message} ({source})")
         self.logs.append((level, message))
 
 class TestBlueprintEngine(unittest.TestCase):
@@ -73,7 +73,42 @@ class TestBlueprintEngine(unittest.TestCase):
         
     def test_ping_flow(self):
         # Trigger -> Ping -> Log
-        pass
+        graph = {
+            "nodes": [
+                {"id": "1", "data": {"type": "trigger", "label": "Start"}},
+                {"id": "2", "data": {"type": "action", "label": "Ping"}}, 
+                {"id": "3", "data": {"type": "string", "label": "IP", "value": "127.0.0.1"}},
+                {"id": "4", "data": {"type": "log", "label": "Logger"}}
+            ],
+            "edges": [
+                # Flow: Start -> Ping -> Log
+                {"source": "1", "sourceHandle": "exec", "target": "2", "targetHandle": "in"},
+                {"source": "2", "sourceHandle": "out",  "target": "4", "targetHandle": "in"},
+                
+                # Data: IP -> Ping.ip
+                {"source": "3", "sourceHandle": "val", "target": "2", "targetHandle": "ip"},
+                
+                # Data: Ping.rtt -> Log.msg
+                {"source": "2", "sourceHandle": "rtt", "target": "4", "targetHandle": "msg"}
+            ]
+        }
+        
+        self.engine.load_graph(graph)
+        self.engine.run()
+        
+        # Ping takes time (subprocess), wait bit longer
+        time.sleep(2.0)
+        self.engine.stop()
+        
+        # Verify logs
+        found_rtt = False
+        for lvl, msg in self.api.logs:
+            # Look for the final log from the Logger node
+            if isinstance(msg, str) and msg.startswith("Blueprint:"):
+                 found_rtt = True
+                 print(f" -> Verify Ping Log: {msg}")
+                 
+        self.assertTrue(found_rtt, "Ping output was not logged")
 
 if __name__ == '__main__':
     unittest.main()

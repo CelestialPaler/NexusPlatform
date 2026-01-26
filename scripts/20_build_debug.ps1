@@ -11,7 +11,8 @@ $PYTHON_ENV = "$env:USERPROFILE\.venvs\negentropy\Scripts\python.exe"
 if (Test-Path $PYTHON_ENV) {
     $PYTHON_EXE = $PYTHON_ENV
     Write-Host "Using Standard Python Environment: $PYTHON_EXE" -ForegroundColor Green
-} else {
+}
+else {
     $PYTHON_EXE = "python"
     Write-Warning "Standard Python Environment not found. Falling back to system python."
 }
@@ -26,7 +27,8 @@ Write-Host "`n[Nexus] Building Frontend..." -ForegroundColor Cyan
 Set-Location "$PLATFORM_DIR/frontend"
 if (Test-Path "node_modules") {
     npm run build
-} else {
+}
+else {
     npm install
     npm run build
 }
@@ -49,6 +51,8 @@ Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
     --onefile `
     --console `
     --clean `
+    --paths "../nexus-core" `
+    --paths "../nexus-sdk/src" `
     --add-data "dist;dist" `
     --add-data "backend;backend" `
     --add-data "config;config" `
@@ -60,6 +64,7 @@ Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n[Nexus] Build Success! ✅" -ForegroundColor Green
     Write-Host "    -> Output: $PLATFORM_DIR/dist/NexusPlatform_Debug.exe" -ForegroundColor Gray
-} else {
+}
+else {
     Write-Error "Backend Build Failed"
 }
