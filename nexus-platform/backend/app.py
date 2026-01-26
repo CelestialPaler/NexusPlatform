@@ -59,6 +59,7 @@ from backend.managers.version import VersionManager
 # from backend.managers.ba import BaManager
 from backend.managers.automation import AutomationManager
 from backend.managers.wireless_capture import WirelessCaptureManager
+from backend.playbooks import PlaybookEngine, PingSweepPlaybook
 
 class Api:
     def __init__(self):
@@ -83,6 +84,10 @@ class Api:
         # self._ba_manager = BaManager(self.base_dir)
         self._automation_manager = AutomationManager(self.base_dir)
         self._wireless_capture_manager = WirelessCaptureManager(self.base_dir)
+        
+        # Initialize Playbook Engine
+        self._playbook_engine = PlaybookEngine(self)
+        self._playbook_engine.register(PingSweepPlaybook)
 
     def set_window(self, window):
         """Set the global window reference."""
@@ -121,6 +126,17 @@ class Api:
         except Exception as e:
             logging.error(f"Failed to open tool window: {e}")
             return False
+
+    # -------------------------------------------------------------------------
+    # Playbook API
+    # -------------------------------------------------------------------------
+    def playbook_get_list(self):
+        """Get list of available playbooks."""
+        return self._playbook_engine.get_list()
+
+    def playbook_run(self, playbook_id, inputs):
+        """Run a specific playbook."""
+        return self._playbook_engine.run_playbook(playbook_id, inputs)
 
     def is_admin(self):
         """Check if the application is running with admin privileges."""
