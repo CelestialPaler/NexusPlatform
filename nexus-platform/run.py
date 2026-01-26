@@ -21,4 +21,4 @@ if __name__ == '__main__':
         height=800
     )
     api.set_window(window)
-    webview.start(debug=False)
+    webview.start(debug=True)
