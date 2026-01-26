@@ -76,10 +76,40 @@ const NodeEditorContent = () => {
     [reactFlowInstance, setNodes]
   );
 
+  const onRun = useCallback(async () => {
+    // Export Nodes/Edges as JSON
+    // Note: reactFlowInstance has getNodes(), getEdges(), or we use the state
+    if (reactFlowInstance) {
+       const flow = reactFlowInstance.toObject();
+       console.log('Running Blueprint:', flow);
+       
+       // Call Data Bridge
+       // Assuming window.pywebview exists
+       if (window.pywebview) {
+           try {
+             const res = await window.pywebview.api.blueprint_run_flow(flow);
+             console.log('Engine Res:', res);
+             alert('Blueprint Started: ' + res.active_triggers + ' triggers');
+           } catch (e) {
+             console.error(e);
+             alert('Failed to run: ' + e);
+           }
+       }
+    }
+  }, [reactFlowInstance]);
+
   return (
     <div className="flex h-full w-full bg-slate-950">
       <Sidebar />
       <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <button 
+                onClick={onRun}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded shadow-lg font-bold flex items-center gap-2"
+            >
+                ▶ Run
+            </button>
+        </div>
         <ReactFlow
           nodes={nodes}
           edges={edges}

@@ -59,6 +59,7 @@ from backend.managers.version import VersionManager
 # from backend.managers.ba import BaManager
 from backend.managers.automation import AutomationManager
 from backend.managers.wireless_capture import WirelessCaptureManager
+from backend.automation.blueprint_engine import BlueprintEngine
 
 class Api:
     def __init__(self):
@@ -82,6 +83,7 @@ class Api:
         # self._rtp_manager = RtpManager(self.base_dir)
         # self._ba_manager = BaManager(self.base_dir)
         self._automation_manager = AutomationManager(self.base_dir)
+        self._blueprint_engine = BlueprintEngine(self)
         self._wireless_capture_manager = WirelessCaptureManager(self.base_dir)
 
     def set_window(self, window):
@@ -120,7 +122,23 @@ class Api:
             return True
         except Exception as e:
             logging.error(f"Failed to open tool window: {e}")
-            return False
+    # --- Blueprint Engine API ---
+
+    def blueprint_run_flow(self, graph_json):
+        """Run the Blueprint Graph"""
+        print("[App] Received Blueprint Flow")
+        try:
+            self._blueprint_engine.stop() # Stop any existing
+            self._blueprint_engine.load_graph(graph_json)
+            count = self._blueprint_engine.run()
+            return {"status": "started", "active_triggers": count}
+        except Exception as e:
+            logging.error(f"Blueprint Error: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def blueprint_stop(self):
+        self._blueprint_engine.stop()
+        return {"status": "stopped"}
 
     def is_admin(self):
         """Check if the application is running with admin privileges."""
