@@ -13,7 +13,9 @@ import { Save, FolderOpen, Play, Code2, Cpu } from 'lucide-react';
 
 import BlueprintNode from './blueprint/BlueprintNode';
 import Sidebar from './blueprint/Sidebar';
-// 注册自定义节点类型
+import BlueprintRunner from './blueprint/BlueprintRunner';
+
+// Register custom node types
 const nodeTypes = {
   blueprintNode: BlueprintNode,
 };
@@ -40,70 +42,6 @@ const NodeEditorContent = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
-
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
-
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-
-      const type = event.dataTransfer.getData('application/reactflow');
-      const payloadStr = event.dataTransfer.getData('application/payload');
-      
-      if (typeof type === 'undefined' || !type) {
-        return;
-      }
-
-      const payload = JSON.parse(payloadStr);
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
-      const newNode = {
-        id: getId(),
-        type,
-        position,
-        data: payload,
-      };
-
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [reactFlowInstance, setNodes]
-  );
-
-
-// 注册自定义节点类型
-const nodeTypes = {
-  blueprintNode: BlueprintNode,
-};
-
-const initialNodes = [
-  { 
-    id: '1', 
-    type: 'blueprintNode', 
-    position: { x: 250, y: 50 }, 
-    data: { 
-      type: 'trigger', 
-      label: 'Start', 
-      outputs: [{id: 'exec', type: 'flow', label: 'Exec'}] 
-    } 
-  },
-];
-
-let id = 0;
-const getId = () => `node_${id++}`;
-
-const NodeEditorContent = () => {
-  const reactFlowWrapper = useRef(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  
   // Tabs: 'editor' | 'runner'
   const [activeTab, setActiveTab] = useState('editor');
   
@@ -123,67 +61,41 @@ const NodeEditorContent = () => {
       event.preventDefault();
 
       const type = event.dataTransfer.getData('application/reactflow');
-      // Hacky way to transfer payload via drag
-      // Realistically we might need a global drag state or parse the string "type|payload"
-      // Current implementation in Sidebar sets "type". 
-      // Sidebar passes JSON string? No, just type string.
-      // Wait, let's assume we can't pass complex object easily.
-      // We will parse the type to decide the initial data.
       
       if (typeof type === 'undefined' || !type) {
         return;
       }
-      
-      // ... existing drop logic ...
-      // Need complete drop logic here or reuse existing if not changed
-      // Re-implementing simplified logic here based on original file logic:
+
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
-      
-      // Reconstruct Data based on Type
-      // Or we can modify Sidebar to stick it in a global/context or JSON stringify
-      // For now, let's assume Sidebar is modified? No user didn't ask.
-      // We'll stick with basic Drop handler if it exists.
-      // WAIT, I am replacing the WHOLE FILE CONTENT or partial?
-      // I am rewriting NodeEditorContent.
-      
-      // Let's implement robust factory here
-      let newNodeData = { label: `${type} node` };
-      let nodeType = type; // The "Data Type" inside the node
-      
-      // This is a duplication of logic that might be in Sidebar? 
-      // Actually Sidebar.jsx defines onDragStart.
-      // It sets "application/reactflow" to nodeType.
-      
-      // We need a helper to generate initial data based on type
-      // ... (Implementation detail omited, assuming standard drop) ...
-      
+
       const newNode = {
         id: getId(),
         type: 'blueprintNode',
         position,
-        data: { label: `${type}`, type: type }, // Basic default
+        data: { label: type, type: type }, // Default data, improved below based on type
       };
 
-      // Enhance data based on known types from Sidebar
-      if (type === 'string') newNode.data = { type: 'string', label: 'String', value: '', outputs: [{id:'val', type:'string'}]};
-      if (type === 'integer') newNode.data = { type: 'integer', label: 'Integer', value: 0, outputs: [{id:'val', type:'integer'}]};
-      if (type === 'boolean') newNode.data = { type: 'boolean', label: 'Boolean', value: false, outputs: [{id:'val', type:'boolean'}]};
-      if (type === 'log') newNode.data = { type: 'log', label: 'Log', inputs: [{id:'in', type:'flow'}, {id:'msg', type:'string'}], outputs: [{id:'out', type:'flow'}]};
-      if (type === 'ping') newNode.data = { type: 'action', label: 'Ping', inputs: [{id:'in', type:'flow'}, {id:'ip', type:'string'}], outputs: [{id:'out', type:'flow'}, {id:'rtt', type:'integer'}]};
-      if (type === 'trigger') newNode.data = { type: 'trigger', label: 'Start', outputs: [{id:'exec', type:'flow'}]};
-      if (type === 'condition') newNode.data = { type: 'condition', label: 'Branch', inputs: [{id:'in', type:'flow'}, {id:'cond', type:'boolean'}], outputs: [{id:'true', type:'flow'}, {id:'false', type:'flow'}]};
+      // Configuration of initial data for specific node types
+      // This mimics what we usually do in the node factory / sidebar
+      if (type === 'string') newNode.data = { ...newNode.data, label: 'String', value: '', outputs: [{id:'val', type:'string'}]};
+      if (type === 'integer') newNode.data = { ...newNode.data, label: 'Integer', value: 0, outputs: [{id:'val', type:'integer'}]};
+      if (type === 'boolean') newNode.data = { ...newNode.data, label: 'Boolean', value: false, outputs: [{id:'val', type:'boolean'}]};
+      if (type === 'log') newNode.data = { ...newNode.data, label: 'Log', inputs: [{id:'in', type:'flow'}, {id:'msg', type:'string'}], outputs: [{id:'out', type:'flow'}]};
+      if (type === 'ping') newNode.data = { ...newNode.data, label: 'Ping', inputs: [{id:'in', type:'flow'}, {id:'ip', type:'string'}], outputs: [{id:'out', type:'flow'}, {id:'rtt', type:'integer'}]};
+      if (type === 'trigger') newNode.data = { ...newNode.data, label: 'Start', outputs: [{id:'exec', type:'flow'}]};
+      if (type === 'condition') newNode.data = { ...newNode.data, label: 'Branch', inputs: [{id:'in', type:'flow'}, {id:'cond', type:'boolean'}], outputs: [{id:'true', type:'flow'}, {id:'false', type:'flow'}]};
       
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance]
+    [reactFlowInstance, setNodes]
   );
 
   // --- Log Handling ---
   useEffect(() => {
-    // Expose log handler to window
+    // Expose log handler to window for backend to call
     window.handleBackendLog = (level, msg, source) => {
         const time = new Date().toLocaleTimeString();
         setLogs(prev => [...prev, { time, level, msg, source }]);
@@ -207,13 +119,13 @@ const NodeEditorContent = () => {
 
   const onLoad = async () => {
       if (!window.pywebview) return;
-      // Simple prompt for now, ideally a modal list
+      
       const name = prompt("Enter Blueprint Name to Load:");
       if(name) {
           try {
               const res = await window.pywebview.api.blueprint_load(name);
               if(res.status === 'success') {
-                  const { nodes, edges } = res.data; // ReactFlow object structure
+                  const { nodes, edges } = res.data; 
                   setNodes(nodes || []);
                   setEdges(edges || []);
                   alert('Loaded: ' + name);
@@ -231,9 +143,11 @@ const NodeEditorContent = () => {
       try {
          const flow = reactFlowInstance.toObject();
          await window.pywebview.api.blueprint_run_flow(flow);
+         // Note: Execution is async, logs come in via window.handleBackendLog
       } catch(e) {
          console.error(e);
          setIsRunning(false);
+         setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), level: 'error', msg: 'Failed to start: ' + e, source: 'System' }]);
       }
   };
 
@@ -242,14 +156,16 @@ const NodeEditorContent = () => {
           await window.pywebview.api.blueprint_stop();
           setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), level: 'warn', msg: 'Engine Manual Stop', source: 'System' }]);
           setIsRunning(false);
-      } catch(e) {}
+      } catch(e) {
+          console.error(e);
+      }
   };
 
   return (
     <div className="flex flex-col h-full w-full bg-slate-950">
       
       {/* 1. Header Bar */}
-      <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center px-4 justify-between select-none">
+      <div className="h-10 bg-slate-900 border-b border-slate-700 flex items-center px-4 justify-between select-none shrink-0">
           <div className="flex items-center gap-2 text-slate-300 font-bold text-sm tracking-wide">
               <span className="text-emerald-500">Nexus</span> 
               <span className="text-slate-600">/</span> 
@@ -286,27 +202,28 @@ const NodeEditorContent = () => {
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
                     <button 
                         onClick={() => { setActiveTab('runner'); onStartEngine(); }}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded shadow-lg font-bold text-sm flex items-center gap-2"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded shadow-lg font-bold text-sm flex items-center gap-2 transition-colors"
                     >
                         <Play size={14} fill="currentColor"/> Run
                     </button>
                 </div>
                 
                 <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                onInit={setReactFlowInstance}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                fitView
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={nodeTypes}
+                  onInit={setReactFlowInstance}
+                  onDrop={onDrop}
+                  onDragOver={onDragOver}
+                  fitView
+                  className="bg-slate-900"
                 >
-                <Controls className="!bg-slate-800 !border-slate-700 [&>button]:!border-slate-700 [&>button]:!fill-slate-300 hover:[&>button]:!bg-slate-700" />
-                <MiniMap className="!bg-slate-900 border !border-slate-700" maskColor="rgba(30, 41, 59, 0.8)" nodeColor="#64748b" />
-                <Background variant="dots" gap={12} size={1} color="#334155" />
+                  <Controls className="!bg-slate-800 !border-slate-700 [&>button]:!border-slate-700 [&>button]:!fill-slate-300 hover:[&>button]:!bg-slate-700" />
+                  <MiniMap className="!bg-slate-900 border !border-slate-700" maskColor="rgba(30, 41, 59, 0.8)" nodeColor="#64748b" />
+                  <Background variant="dots" gap={12} size={1} color="#334155" />
                 </ReactFlow>
             </div>
         </div>
