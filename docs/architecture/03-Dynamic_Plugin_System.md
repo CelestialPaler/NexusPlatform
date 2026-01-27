@@ -59,16 +59,31 @@ class UniversalManager(BaseManager):
 
 > **结论**: 工具的迭代将不再触发 Platform 的发版。Platform 真正退化为纯粹的“操作系统”。
 
-## 3. 特殊情况处理 (Escape Hatch)
+## 3. UI 混合渲染策略 (Hybrid UI Strategy)
 
-对于像 `WirelessCapture` 这样需要复杂交互（实时绘图、特殊文件流处理）的工具：
+为了平衡“开发效率”与“用户体验”，我们不强制所有工具都使用流水线 UI。
 
-*   保留 **自定义 Manager** 机制。
-*   在 Metadata 中标记 `"ui_mode": "custom"`。
-*   前端看到此标记，加载专门的 React 组件；否则使用通用渲染器。
+### Level 1: 流水线 UI (Schema-Driven)
+- **适用**: 80% 的长尾工具 (如 IP Calc, DNS Lookup, Ping)。
+- **机制**: 完全由元数据生成表单。
+- **代价**: 零前端代码。
+- **体验**: 标准化，无惊喜。
+
+### Level 2: 托管式定制 UI (Custom Component + Universal Backend)
+- **适用**: 15% 需要图表或特殊交互的工具 (如 Iperf)。
+- **机制**:
+    - 前端编写 `IperfPanel.jsx` 并注册到组件字典中 (`tools['iperf'] = IperfPanel`)。
+    - **后端复用 UniversalManager**。只要数据流符合 JSON 标准，后端就无需修改。
+- **代价**: 仅需更新前端，后端免维护。
+- **体验**: 原生级的交互体验。
+
+### Level 3: 全栈定制 (Custom Stack)
+- **适用**: 5% 的极度复杂场景 (如 Wireless Capture)。
+- **机制**: 独立的 Manager (处理特殊逻辑如共享内存) + 独立的 Panel。
+- **代价**: 需要改动前后端全链路。这也是目前架构保留 "Custom Manager" 支持的原因。
 
 ## 4. 实施计划
 
 1.  **Refactor**: 在 `nexus-core` 中完善 `Metadata` 规范，确保所有输入字段都有明确 UI 定义。
 2.  **Backend**: 实现 `PluginLoader`，能够遍历 Python 包并实例化插件。
-3.  **Frontend**: 开发 `DynamicToolRunner` 组件。
+3.  **Frontend**: 开发 `DynamicToolRunner` 组件，并实现组件注册表以支持 Level 2 策略。
