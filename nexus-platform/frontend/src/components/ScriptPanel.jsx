@@ -436,8 +436,8 @@ const ScriptPanel = ({ t, taskLibrary = [], actionLibrary = [], currentProfile =
                                     <span
                                         onClick={() => isEditMode && setOpenPriorityMenu(openPriorityMenu === idx ? null : idx)}
                                         className={`text-xs font-bold px-2 py-1 rounded cursor-pointer select-none ${item.priority === 'P0' ? 'bg-red-100 text-red-800' :
-                                                item.priority === 'P1' ? 'bg-orange-100 text-orange-800' :
-                                                    'bg-blue-100 text-blue-800'
+                                            item.priority === 'P1' ? 'bg-orange-100 text-orange-800' :
+                                                'bg-blue-100 text-blue-800'
                                             }`}>
                                         {item.priority || 'P4'}
                                     </span>

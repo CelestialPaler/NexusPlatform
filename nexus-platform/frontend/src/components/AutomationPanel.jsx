@@ -8,10 +8,10 @@ import {
 } from 'lucide-react';
 import ConfirmModal from './nexus-ui/ConfirmModal';
 import PromptModal from './nexus-ui/PromptModal';
-import Input from './common/Input';
-import Button from './common/Button';
-import Select from './common/Select';
-import TextArea from './common/TextArea';
+import Input from './nexus-ui/Input';
+import Button from './nexus-ui/Button';
+import Select from './nexus-ui/Select';
+import TextArea from './nexus-ui/TextArea';
 import ScriptPanel from './ScriptPanel';
 import Toggle from './Toggle';
 
