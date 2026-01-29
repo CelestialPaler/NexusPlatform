@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { 
-    Play, Square, Plus, Trash2, Activity, Settings, 
-    BarChart2 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    Play, Square, Activity, BarChart2, Zap
 } from 'lucide-react';
-import { 
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
-    ResponsiveContainer 
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer
 } from 'recharts';
 
 import { Input, Button, LogConsole } from './nexus-ui';
@@ -16,49 +15,64 @@ const TOOL_ID = 'nexus.network.ping';
 // --- Sub-components ---
 
 const StatsCard = ({ label, value, unit, color = "text-blue-500" }) => (
-    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border dark:border-gray-700 shadow-sm flex flex-col items-center justify-center min-w-[100px]">
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 shadow-sm flex flex-col items-center justify-center">
         <span className="text-xs text-gray-400 uppercase font-semibold tracking-wider">{label}</span>
-        <div className="flex items-baseline gap-1 mt-1">
-            <span className={`text-2xl font-bold font-mono ${color}`}>{value}</span>
-            <span className="text-xs text-gray-500">{unit}</span>
+        <div className="flex items-baseline gap-1 mt-2">
+            <span className={`text-3xl font-bold font-mono ${color}`}>{value}</span>
+            <span className="text-sm text-gray-500">{unit}</span>
         </div>
     </div>
 );
 
-// --- Single Instance View ---
-const PingInstanceView = ({ instance, onUpdate, active }) => {
+// --- Main Panel ---
+export default function PingPanel() {
+    // Configuration State
+    const [target, setTarget] = useState('8.8.8.8');
+
+    // Runtime State
+    const [isRunning, setIsRunning] = useState(false);
+    const [instanceId, setInstanceId] = useState(null);
+
+    // Data State
     const [logs, setLogs] = useState([]);
     const [chartData, setChartData] = useState([]);
     const [stats, setStats] = useState({ min: 0, max: 0, avg: 0, current: 0, sent: 0, lost: 0 });
 
+    // Refs for cleanup
+    const activeIdRef = useRef(null);
+
     useEffect(() => {
-        // Subscribe to events using UniversalDriver
-        // Events are: nexus.network.ping:ping-log
-        // Note: PingTool still emits 'ping-log' derived from callback('ping-log', ...)
+        // Event Subscriptions
         const unsubLog = UniversalDriver.on(TOOL_ID, 'ping-log', (payload) => {
-            if (payload.id === instance.id) {
-                setLogs(prev => [...prev, payload.data].slice(-500));
+            if (payload.id === activeIdRef.current) {
+                setLogs(prev => [...prev, payload.data].slice(-200));
             }
         });
 
         const unsubData = UniversalDriver.on(TOOL_ID, 'ping-data', (payload) => {
-            if (payload.id === instance.id) {
+            if (payload.id === activeIdRef.current) {
                 const point = payload.data;
                 const lat = point.latency || 0;
-                
+
                 setChartData(prev => {
                     const newData = [...prev, { time: new Date().toLocaleTimeString(), latency: lat }];
-                    return newData.slice(-60); 
+                    return newData.slice(-100); // Keep last 100 points
                 });
 
                 // Update Stats
                 setStats(s => {
                     const newSent = s.sent + 1;
                     const newLost = point.error ? s.lost + 1 : s.lost;
-                    
-                    const newMin = (s.min === 0 || (lat < s.min && !point.error)) ? lat : s.min;
-                    const newMax = lat > s.max ? lat : s.max;
-                    
+
+                    // Only update min/max if not an error (unless it's the first point)
+                    let newMin = s.min;
+                    let newMax = s.max;
+
+                    if (!point.error) {
+                        newMin = (s.min === 0 || lat < s.min) ? lat : s.min;
+                        newMax = lat > s.max ? lat : s.max;
+                    }
+
                     return {
                         ...s,
                         current: lat,
@@ -66,15 +80,16 @@ const PingInstanceView = ({ instance, onUpdate, active }) => {
                         lost: newLost,
                         min: newMin,
                         max: newMax,
-                        avg: s.sent === 0 ? lat : Math.round((s.avg * s.sent + lat) / (s.sent + 1)) 
+                        avg: s.sent === 0 ? lat : Math.round((s.avg * s.sent + lat) / (s.sent + 1))
                     };
                 });
             }
         });
 
         const unsubDone = UniversalDriver.on(TOOL_ID, 'ping-done', (payload) => {
-            if (payload.id === instance.id) {
-                onUpdate(instance.id, { status: 'idle' });
+            if (payload.id === activeIdRef.current) {
+                setIsRunning(false);
+                setLogs(prev => [...prev, "--- Process Finished ---"]);
             }
         });
 
@@ -83,216 +98,152 @@ const PingInstanceView = ({ instance, onUpdate, active }) => {
             unsubData();
             unsubDone();
         };
-    }, [instance.id, onUpdate]);
+    }, []);
 
-    const handleStop = async () => {
-        await UniversalDriver.invoke(TOOL_ID, 'stop', { instance_id: instance.id });
-        onUpdate(instance.id, { status: 'idle' });
+    const handleStart = async () => {
+        if (!target) return;
+        if (isRunning) return;
+
+        const newId = `ping-${Date.now()}`;
+        activeIdRef.current = newId;
+        setInstanceId(newId);
+
+        // Reset Data
+        setLogs(["--- Starting Ping ---"]);
+        setChartData([]);
+        setStats({ min: 0, max: 0, avg: 0, current: 0, sent: 0, lost: 0 });
+        setIsRunning(true);
+
+        try {
+            const res = await UniversalDriver.invoke(TOOL_ID, 'run', {
+                host: target,
+                id: newId
+            });
+            if (res.status === 'error') {
+                setLogs(prev => [...prev, `Error: ${res.message}`]);
+                setIsRunning(false);
+            }
+        } catch (e) {
+            console.error(e);
+            setIsRunning(false);
+        }
     };
 
-    if (!active) return null;
+    const handleStop = async () => {
+        if (!instanceId) return;
+
+        setLogs(prev => [...prev, "--- Stopping... ---"]);
+        await UniversalDriver.invoke(TOOL_ID, 'stop', { instance_id: instanceId });
+        // The 'ping-done' event will set isRunning to false
+        // But we set it here optimistically/just in case
+        // activeIdRef.current = null; // Don't clear ref yet, let trailing logs come in
+    };
 
     return (
-        <div className="flex flex-col h-full gap-4">
-            {/* Header / Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                <div className="col-span-2 md:col-span-2 flex items-center space-x-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border dark:border-gray-700">
-                    <Activity className={instance.status === 'running' ? "text-green-500 animate-pulse" : "text-gray-400"} size={32} />
-                    <div>
-                        <div className="text-sm text-gray-500">Target Host</div>
-                        <div className="text-xl font-bold font-mono">{instance.config.host}</div>
-                        <div className="text-xs text-gray-400 flex items-center mt-1">
-                            <span className={`w-2 h-2 rounded-full mr-2 ${instance.status === 'running' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                            {instance.status.toUpperCase()}
+        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900/50 p-6 space-y-6">
+            {/* Header / Config */}
+            <div className="flex flex-col md:flex-row md:items-end gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700 shadow-sm">
+                <div className="flex-1">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center mb-4">
+                        <Zap className="mr-2 text-blue-500" />
+                        Network Connectivity Test
+                    </h2>
+                    <div className="flex gap-4 items-end">
+                        <Input
+                            label="Target Host"
+                            placeholder="IP Address or Domain (e.g., 8.8.8.8)"
+                            value={target}
+                            onChange={e => setTarget(e.target.value)}
+                            wrapperClassName="flex-1"
+                            onKeyDown={e => e.key === 'Enter' && handleStart()}
+                            disabled={isRunning}
+                        />
+                        <div className="pb-[1px]">
+                            {!isRunning ? (
+                                <Button
+                                    variant="primary"
+                                    icon={Play}
+                                    onClick={handleStart}
+                                    className="min-w-[120px] h-[42px]"
+                                >
+                                    Start
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="danger"
+                                    icon={Square}
+                                    onClick={handleStop}
+                                    className="min-w-[120px] h-[42px]"
+                                >
+                                    Stop
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
-                <StatsCard label="Current" value={stats.current} unit="ms" />
+
+                {/* Quick Status Indicator */}
+                <div className="hidden md:flex flex-col items-end justify-center px-4 border-l dark:border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Status</div>
+                    <div className={`flex items-center font-mono font-bold ${isRunning ? 'text-green-500' : 'text-gray-400'}`}>
+                        <Activity size={18} className={`mr-2 ${isRunning ? 'animate-pulse' : ''}`} />
+                        {isRunning ? 'RUNNING' : 'IDLE'}
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatsCard label="Current Latency" value={stats.current} unit="ms" />
                 <StatsCard label="Average" value={stats.avg} unit="ms" />
-                <StatsCard label="Min/Max" value={`${stats.min}/${stats.max}`} unit="ms" />
+                <StatsCard label="Min / Max" value={`${stats.min} / ${stats.max}`} unit="ms" />
                 <StatsCard label="Packet Loss" value={stats.lost} unit="pkt" color="text-red-500" />
             </div>
 
-            {/* Main Content: Chart + Log */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
-                {/* Chart Area */}
-                <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 border dark:border-gray-700 shadow-sm flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
+            {/* Main Content: Chart & Log (Vertical Stack) */}
+            <div className="flex-1 min-h-0 flex flex-col gap-6">
+
+                {/* Chart Area (Fixed Height) */}
+                <div className="h-64 bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 shadow-sm flex flex-col p-4 shrink-0">
+                    <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-gray-500 flex items-center">
                             <BarChart2 size={16} className="mr-2" />
-                            Latency History
+                            Latency Analysis
                         </h3>
                     </div>
                     <div className="flex-1 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData}>
-                                <defs>
-                                    <linearGradient id="colorLat" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
+                            <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.3} />
                                 <XAxis dataKey="time" hide />
-                                <YAxis domain={[0, 'auto']} stroke="#9ca3af" fontSize={12} />
-                                <Tooltip 
-                                    contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }}
+                                <YAxis
+                                    domain={[0, 'auto']}
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6', borderRadius: '8px' }}
                                     itemStyle={{ color: '#60a5fa' }}
                                 />
-                                <Area type="monotone" dataKey="latency" stroke="#3b82f6" fillOpacity={1} fill="url(#colorLat)" isAnimationActive={false} />
-                            </AreaChart>
+                                <Line
+                                    type="monotone"
+                                    dataKey="latency"
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    dot={false}
+                                    activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                                    isAnimationActive={false}
+                                />
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Log Area */}
-                <div className="lg:col-span-1 h-full min-h-0 flex flex-col">
-                     <LogConsole logs={logs} height="h-full" className="flex-1" />
-                </div>
-            </div>
-
-            {/* Helper Actions */}
-            {instance.status === 'running' && (
-                <div className="flex justify-end">
-                    <Button variant="danger" onClick={handleStop} icon={Square}>Stop Process</Button>
-                </div>
-            )}
-        </div>
-    );
-};
-
-// --- Main Panel ---
-export default function PingPanel() {
-    const [instances, setInstances] = useState([]);
-    const [activeInstanceId, setActiveInstanceId] = useState(null);
-    const [target, setTarget] = useState('8.8.8.8');
-
-    // Create a default instance
-    const handleStart = async () => {
-        if (!target) return;
-        
-        const newId = `ping-${Date.now()}`;
-        const newInstance = {
-            id: newId,
-            status: 'running',
-            config: { host: target, id: newId } // Pass ID in config for backend
-        };
-
-        setInstances(prev => [...prev, newInstance]);
-        setActiveInstanceId(newId);
-
-        try {
-            // Call via UniversalDriver
-            const res = await UniversalDriver.invoke(TOOL_ID, 'run', newInstance.config);
-            if (res.status === 'error') {
-                 console.error("Failed to start ping:", res.message);
-                 // Handle error updates
-            }
-        } catch (e) {
-            console.error("Driver error:", e);
-        }
-    };
-
-    const handleUpdateInstance = (id, updates) => {
-        setInstances(prev => prev.map(inst => inst.id === id ? { ...inst, ...updates } : inst));
-    };
-
-    const handleRemove = async (id, e) => {
-        e.stopPropagation();
-        // Ensure stopped
-        await UniversalDriver.invoke(TOOL_ID, 'stop', { instance_id: id });
-        setInstances(prev => {
-            const next = prev.filter(i => i.id !== id);
-            if (activeInstanceId === id) setActiveInstanceId(next.length > 0 ? next[0].id : null);
-            return next;
-        });
-    };
-
-    return (
-        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900/50">
-            {/* Toolbar */}
-            <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-end space-x-4 shadow-sm">
-                <Input 
-                    label="Target Host" 
-                    placeholder="IP or Domain" 
-                    value={target} 
-                    onChange={e => setTarget(e.target.value)}
-                    wrapperClassName="w-64"
-                    onKeyDown={e => e.key === 'Enter' && handleStart()}
-                />
-                
-                <Button 
-                    variant="primary" 
-                    icon={Play} 
-                    onClick={handleStart}
-                    className="mb-[1px]" // Alignment hack
-                >
-                    Start Ping
-                </Button>
-                
-                <div className="flex-1" />
-                
-                <div className="flex items-center text-sm text-gray-500">
-                    <Settings size={16} className="mr-1" />
-                    <span>Advanced Options</span>
-                </div>
-            </div>
-
-            <div className="flex-1 flex overflow-hidden">
-                {/* Sidebar List */}
-                <div className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col overflow-y-auto">
-                    {instances.length === 0 && (
-                        <div className="p-4 text-center text-gray-500 text-sm mt-10">
-                            No active sessions
-                        </div>
-                    )}
-                    {instances.map(inst => (
-                        <div 
-                            key={inst.id}
-                            onClick={() => setActiveInstanceId(inst.id)}
-                            className={`p-3 border-b dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group ${activeInstanceId === inst.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}`}
-                        >
-                            <div className="flex justify-between items-start">
-                                <div className="font-mono font-bold text-sm truncate">{inst.config.host}</div>
-                                <button 
-                                    onClick={(e) => handleRemove(inst.id, e)}
-                                    className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                            <div className="flex items-center text-xs text-gray-500 mt-1">
-                                {inst.status === 'running' ? (
-                                    <span className="flex items-center text-green-500">
-                                        <Activity size={12} className="mr-1 animate-pulse" /> Running
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center">
-                                        <Square size={12} className="mr-1" /> Stopped
-                                    </span>
-                                )}
-                                <span className="mx-2">|</span>
-                                <span className="font-mono">{inst.id.slice(-6)}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Main View */}
-                <div className="flex-1 p-4 overflow-hidden">
-                    {activeInstanceId ? (
-                        <PingInstanceView 
-                            key={activeInstanceId} 
-                            instance={instances.find(i => i.id === activeInstanceId)} 
-                            onUpdate={handleUpdateInstance}
-                            active={true}
-                        />
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                            <Activity size={48} className="mb-4 opacity-50" />
-                            <p>Select or create a ping session</p>
-                        </div>
-                    )}
+                {/* Log Console (Fixed Height) */}
+                <div className="min-h-0">
+                    <LogConsole logs={logs} height="h-80" className="rounded-xl shadow-sm border-0" />
                 </div>
             </div>
         </div>

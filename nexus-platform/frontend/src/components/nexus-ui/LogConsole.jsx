@@ -8,11 +8,11 @@ function cn(...inputs) {
 }
 
 const LogConsole = ({ logs = [], className, autoScroll = true, height = "h-64", ...props }) => {
-    const bottomRef = useRef(null);
+    const scrollRef = useRef(null);
 
     useEffect(() => {
-        if (autoScroll && bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: "smooth" });
+        if (autoScroll && scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [logs, autoScroll]);
 
@@ -22,13 +22,13 @@ const LogConsole = ({ logs = [], className, autoScroll = true, height = "h-64", 
     };
 
     return (
-        <div className={cn("w-full flex flex-col font-mono text-sm", className)} {...props}>
-             <div className="flex items-center justify-between bg-gray-800 px-3 py-1.5 rounded-t-lg border-b border-gray-700">
+        <div className={cn("w-full flex flex-col font-mono text-sm border-gray-700", className)} {...props}>
+            <div className="flex items-center justify-between bg-gray-800 px-3 py-1.5 rounded-t-lg border border-b-0 border-gray-700 shrink-0">
                 <div className="flex items-center text-gray-400">
                     <Terminal size={14} className="mr-2" />
                     <span className="text-xs uppercase tracking-wider font-semibold">Console Output</span>
                 </div>
-                <button 
+                <button
                     onClick={handleCopy}
                     className="text-gray-500 hover:text-white transition-colors"
                     title="Copy to clipboard"
@@ -36,8 +36,11 @@ const LogConsole = ({ logs = [], className, autoScroll = true, height = "h-64", 
                     <Copy size={14} />
                 </button>
             </div>
-            
-            <div className={cn("w-full bg-gray-950 text-gray-300 p-3 overflow-y-auto rounded-b-lg border border-t-0 border-gray-700", height)}>
+
+            <div
+                ref={scrollRef}
+                className={cn("w-full bg-gray-950 text-gray-300 p-3 overflow-y-auto rounded-b-lg border border-gray-700", height)}
+            >
                 {logs.length === 0 ? (
                     <div className="text-gray-600 italic">No output...</div>
                 ) : (
@@ -50,7 +53,6 @@ const LogConsole = ({ logs = [], className, autoScroll = true, height = "h-64", 
                         </div>
                     ))
                 )}
-                <div ref={bottomRef} />
             </div>
         </div>
     );

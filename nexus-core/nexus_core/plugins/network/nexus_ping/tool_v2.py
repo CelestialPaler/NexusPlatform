@@ -32,12 +32,16 @@ class PingTool(ITool):
 
     def stop(self, instance_id):
         """Stop the running Ping process."""
+        logging.info(f"Stopping Ping instance: {instance_id}")
         if instance_id in self.ping_processes:
             try:
+                logging.info(f"Terminating process for {instance_id}")
                 self.ping_processes[instance_id].terminate()
                 return {"status": "stopped"}
             except Exception as e:
+                logging.error(f"Error stopping ping: {e}")
                 return {"status": "error", "message": str(e)}
+        logging.warning(f"No process found for {instance_id}")
         return {"status": "no_process"}
 
     def run(self, config, callback=None):

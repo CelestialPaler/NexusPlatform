@@ -99,7 +99,7 @@ class UniversalManager(BaseManager):
                 def bridge_callback(event_type, event_data):
                     self.send_to_js({
                         "type": f"{tool_id}:{event_type}", # Namespaced event
-                        "payload": event_data
+                        "detail": event_data
                     })
                 
                 # Execute logic (potentially async logic wrapped in thread if needed by tool, 

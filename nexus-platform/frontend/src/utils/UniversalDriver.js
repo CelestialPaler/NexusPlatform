@@ -14,7 +14,7 @@ const UniversalDriver = {
             console.warn('[UniversalDriver] pywebview API not available. Mocking response.');
             return new Promise(resolve => setTimeout(() => resolve({ status: 'mock_success' }), 500));
         }
-        
+
         try {
             return await window.pywebview.api.universal_invoke(toolId, action, payload);
         } catch (error) {
@@ -43,7 +43,7 @@ const UniversalDriver = {
      */
     on: (toolId, eventType, callback) => {
         const fullEventType = `${toolId}:${eventType}`;
-        
+
         const handler = (event) => {
             // The detail contains the payload sent from backend
             callback(event.detail);
