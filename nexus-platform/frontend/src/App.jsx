@@ -14,19 +14,22 @@ import Toggle from './components/Toggle'
 import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette, Bug } from 'lucide-react'
 import { translations } from './translations'
 import { ToastProvider } from './components/nexus-ui'
+import { ThemeProvider, useTheme } from './hooks/useTheme'
 
 function App() {
     return (
-        <ToastProvider>
-            <AppContent />
-        </ToastProvider>
+        <ThemeProvider>
+            <ToastProvider>
+                <AppContent />
+            </ToastProvider>
+        </ThemeProvider>
     );
 }
 
 function AppContent() {
     const [activeTab, setActiveTab] = useState('tools')
     const [lang, setLang] = useState('en')
-    const [theme, setTheme] = useState('light')
+    const { theme, setTheme } = useTheme()
     const [debugMode, setDebugMode] = useState(false)
 
     // UI Structure State
