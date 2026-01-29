@@ -36,7 +36,7 @@ export function StatusIndicator({ status = "neutral", label, pulse = false, clas
 
 export function StatusDot({ status = "neutral", pulse = false, className, title }) {
     return (
-        <div 
+        <div
             className={cn("flex items-center", className)}
             title={title || status}
         >

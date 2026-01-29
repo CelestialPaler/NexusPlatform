@@ -9,7 +9,7 @@ function cn(...inputs) {
 const Switch = React.forwardRef(({ label, error, className, wrapperClassName, helpText, checked, onChange, ...props }, ref) => {
     return (
         <div className={cn("w-full flex items-center justify-between", wrapperClassName)}>
-             <div className="flex flex-col mr-4">
+            <div className="flex flex-col mr-4">
                 {label && (
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {label}
