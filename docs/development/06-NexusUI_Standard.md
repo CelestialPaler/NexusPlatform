@@ -18,15 +18,15 @@
 
 所有 **Input/Form 类组件** 必须实现以下接口：
 
-| Prop 参数名 | 类型 | 必须 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- | :--- |
-| `label` | `string` | No | 字段标题，位于上方 | `"目标 IP"` |
-| `error` | `string` | No | 错误信息，位于下方红字 | `"IP 格式不正确"` |
-| `helpText` | `string` | No | 帮助文本，位于下方灰字 | `"支持 IPv4/IPv6"` |
-| `className` | `string` | No | **输入框本体-核心元素**的样式 | `bg-red-500` |
-| `wrapperClassName` | `string` | No | **最外层容器**的样式 | `mb-4 w-1/2` |
-| `icon` | `LucideIcon` | No | 左侧装饰图标 | `Search` |
-| `ref` | `Ref` | **Yes** | 必须支持 `forwardRef` | (用于 React Hook Form) |
+| Prop 参数名        | 类型         | 必须    | 说明                          | 示例                   |
+| :----------------- | :----------- | :------ | :---------------------------- | :--------------------- |
+| `label`            | `string`     | No      | 字段标题，位于上方            | `"目标 IP"`            |
+| `error`            | `string`     | No      | 错误信息，位于下方红字        | `"IP 格式不正确"`      |
+| `helpText`         | `string`     | No      | 帮助文本，位于下方灰字        | `"支持 IPv4/IPv6"`     |
+| `className`        | `string`     | No      | **输入框本体-核心元素**的样式 | `bg-red-500`           |
+| `wrapperClassName` | `string`     | No      | **最外层容器**的样式          | `mb-4 w-1/2`           |
+| `icon`             | `LucideIcon` | No      | 左侧装饰图标                  | `Search`               |
+| `ref`              | `Ref`        | **Yes** | 必须支持 `forwardRef`         | (用于 React Hook Form) |
 
 ## 3. 代码模板 (Boilerplate)
 
