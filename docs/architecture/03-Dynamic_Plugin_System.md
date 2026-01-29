@@ -57,52 +57,50 @@ class UniversalManager(BaseManager):
             return tool.stop(payload)
 ```
 
-#### 1.2 前端改造 (Schema-Driven UI)
-引入 **Visual Builder** 概念。不再手写表单，而是根据 Metadata 自动生成。
+#### 1.2 前端改造 (Unified Component System)
+摒弃 "Auto-Generated UI" 的理想化设计，回归 **Explicit Design**，但通过**高度复用的控件库**来提升效率。
 
-1.  Frontend 调用 `get_all_tools_metadata()`。
-2.  遍历列表，为每个工具生成一个 Card。
-3.  点击进入，根据 `inputs` schema 渲染表单：
-    *   `type: string` -> `<input type="text">`
-    *   `type: boolean` -> `<Switch>`
-    *   `type: select` -> `<Select>`
-4.  点击“运行” -> 调用 `invoke(tool_name, 'run', form_data)`。
+1.  **Component Library**: 建立 `NexusUI` 库，提供标准化的配置组件 (`<IPInput>`, `<DeviceSelector>`, `<LogViewer>`)。
+2.  **Tool Panel**: 每个工具**必须**显式实现自己的前端面板 (`PingPanel.jsx`)。
+3.  **Communication**: 虽然 UI 是手写的，但通信层依然走 `UniversalManager` 通道。
+    ```javascript
+    // PingPanel.jsx
+    const handleRun = (data) => {
+        // 不需要专门写后端接口，直接调用通用通道
+        UniversalDriver.invoke('ping', 'run', data);
+    }
+    ```
 
 ## 2. 版本解耦效果
 
 在此架构下，当 **Ping 工具** 升级（例如新增 `timeout` 参数）：
 
-1.  **Core**: 开发者在 `PingTool` 中修改 `metadata` 和 `run` 逻辑。
-2.  **Platform**: **无需修改**。`UniversalManager` 不关心具体参数，只负责透传 JSON。
-3.  **Frontend**: **无需修改**。动态表单引擎会自动读取新 metadata 并渲染出 `Timeout` 输入框。
+1.  **Core**: 开发者在 `PingTool` 中修改 `run` 逻辑，并更新 `metadata` (用于校验)。
+2.  **Platform**: **无需修改**。`UniversalManager` 透传 JSON。
+3.  **Frontend**: **需要修改**。开发者需要在 `PingPanel.jsx` 中手动添加一个 `<NumberInput name="timeout" />`。
+    *   *权衡*: 虽然牺牲了部分自动化，但换来了**绝对并一致的 UI 掌控力**和**用户体验**。
 
-> **结论**: 工具的迭代将不再触发 Platform 的发版。Platform 真正退化为纯粹的“操作系统”。
+> **结论**: 平台的稳定性(Platform Stability)得到了保证，工具的迭代只需关注 Core(逻辑) + Frontend(界面)。
 
-## 3. UI 混合渲染策略 (Hybrid UI Strategy)
+## 3. UI 渲染策略 (Unified Design Strategy)
 
-为了平衡“开发效率”与“用户体验”，我们不强制所有工具都使用流水线 UI。
+我们放弃 "No-Code" 的幻想，转而追求 "High-Efficiency Code"。
 
-### Level 1: 流水线 UI (Schema-Driven)
-- **适用**: 80% 的长尾工具 (如 IP Calc, DNS Lookup, Ping)。
-- **机制**: 完全由元数据生成表单。
-- **代价**: 零前端代码。
-- **体验**: 标准化，无惊喜。
+### 策略 A: 标准工具 (Standard Tool)
+- **适用**: 绝大多数工具 (Ping, Iperf, MTU Test)。
+- **机制**: 
+    - **Frontend**: 手写面板，大量拼装 `NexusUI` 的标准组件。
+    - **Backend**: 复用 `UniversalManager`，**零后端代码**。
+- **优势**: 开发极快（拼积木），体验统一，后端免维护。
 
-### Level 2: 托管式定制 UI (Custom Component + Universal Backend)
-- **适用**: 15% 需要图表或特殊交互的工具 (如 Iperf)。
-- **机制**:
-    - 前端编写 `IperfPanel.jsx` 并注册到组件字典中 (`tools['iperf'] = IperfPanel`)。
-    - **后端复用 UniversalManager**。只要数据流符合 JSON 标准，后端就无需修改。
-- **代价**: 仅需更新前端，后端免维护。
-- **体验**: 原生级的交互体验。
-
-### Level 3: 全栈定制 (Custom Stack)
-- **适用**: 5% 的极度复杂场景 (如 Wireless Capture)。
-- **机制**: 独立的 Manager (处理特殊逻辑如共享内存) + 独立的 Panel。
-- **代价**: 需要改动前后端全链路。这也是目前架构保留 "Custom Manager" 支持的原因。
+### 策略 B: 深度定制工具 (Deep Integration Tool)
+- **适用**: 极度复杂场景 (如 Wireless Capture, Spectrum Analyser)。
+- **机制**: 
+    - **Frontend**: 手写 D3/Canvas 复杂可视化。
+    - **Backend**: 如有必要（如共享内存、Root权限流），可保留独立 Manager，否则依然优先使用 `UniversalManager`。
 
 ## 4. 实施计划
 
-1.  **Refactor**: 在 `nexus-core` 中完善 `Metadata` 规范，确保所有输入字段都有明确 UI 定义。
-2.  **Backend**: 实现 `PluginLoader`，能够遍历 Python 包并实例化插件。
-3.  **Frontend**: 开发 `DynamicToolRunner` 组件，并实现组件注册表以支持 Level 2 策略。
+1.  **Backend**: 实现 `UniversalManager` 与 `PluginLoader`。
+2.  **Frontend**: 建立 **NexusUI 组件库** (提取现有的 Form 组件)。
+3.  **Frontend**: 改造现有工具 (Ping/Iperf) 为 "策略 A" 模式。
