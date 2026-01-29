@@ -582,6 +582,10 @@ def get_entrypoint():
         # In the frozen bundle, 'dist' is at the root level because of --add-data
         return os.path.join(base_dir, 'dist', 'index.html')
 
+    # Hot Reload Dev Mode
+    if os.environ.get('NEXUS_DEV_MODE') == 'true':
+        return 'http://localhost:5173'
+
     # Running in a real app or dev environment
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_dir, 'dist', 'index.html')
