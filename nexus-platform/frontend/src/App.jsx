@@ -108,7 +108,8 @@ function App() {
                 {!isStandalone && (
                     <div className="w-64 flex-shrink-0 bg-gray-900 border-r border-gray-800 p-4 flex flex-col">
                         <div className="text-xl font-bold mb-8 text-blue-400 flex items-center gap-2">
-                            <Network /> Nexus Platform
+                           <img src="/images/logo.png" className="w-8 h-8 object-contain" alt="Nexus" />
+                           Nexus Platform
                         </div>
                         <nav className="flex-1 space-y-2">
                             <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
@@ -229,8 +230,8 @@ function App() {
                                     <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                                         <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">About</h3>
                                         <div className="flex flex-col items-center text-center space-y-4">
-                                            <div className="p-4 bg-blue-50 dark:bg-gray-700 rounded-full">
-                                                <Network size={48} className="text-blue-600 dark:text-blue-400" />
+                                            <div className="p-4 rounded-xl">
+                                                <img src="/images/full.png" alt="Nexus Networks" className="h-24 w-auto object-contain bg-white dark:bg-transparent rounded-lg p-2" />
                                             </div>
                                             <div>
                                                 <h4 className="text-xl font-bold text-gray-900 dark:text-white">Nexus Platform</h4>

@@ -589,16 +589,25 @@ def get_entrypoint():
 if __name__ == '__main__':
     api = Api()
     entry = get_entrypoint()
-    
+
+    # Resolve icon path
+    icon_path = os.path.join(api.base_dir, 'assets', 'icon.ico')
+    # Validating icon existence to prevent pywebview warnings
+    if not os.path.exists(icon_path):
+        logging.warning(f"Icon not found at {icon_path}")
+        icon_path = None
+
     window = webview.create_window(
-        'Network Analysis Platform', 
+        'Nexus Network Analysis Platform',
         url=entry,
         js_api=api,
-        width=2560, 
-        height=1440
+        width=2560,
+        height=1440,
+        frameless=True  # Required for Custom TitleBar
     )
-    
+
     api.set_window(window)
-    
+
     # Enable debug to see logs in console/file
-    webview.start(debug=True)
+    # Pass icon here for global application icon
+    webview.start(debug=True, icon=icon_path)

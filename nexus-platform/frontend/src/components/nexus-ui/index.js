@@ -9,3 +9,4 @@ export { default as Modal } from './Modal';
 export { default as ConfirmModal } from './ConfirmModal';
 export { default as PromptModal } from './PromptModal';
 export { default as Tooltip } from './Tooltip';
+export { default as ImageViewer } from './ImageViewer';
