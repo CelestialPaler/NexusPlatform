@@ -8,15 +8,17 @@ import BaPanel from './components/BaPanel'
 import WirelessCapturePanel from './components/WirelessCapturePanel'
 import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
+import DebugPanel from './components/DebugPanel'
 import TitleBar from './components/TitleBar'
 import Toggle from './components/Toggle'
-import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette } from 'lucide-react'
+import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette, Bug } from 'lucide-react'
 import { translations } from './translations'
 
 function App() {
     const [activeTab, setActiveTab] = useState('tools')
     const [lang, setLang] = useState('en')
     const [theme, setTheme] = useState('light')
+    const [debugMode, setDebugMode] = useState(false)
 
     // UI Structure State
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -126,6 +128,13 @@ function App() {
                                 <Network className={isSidebarCollapsed ? '' : 'mr-3'} /> 
                                 {!isSidebarCollapsed && t.nodeEditor}
                             </button>
+
+                            {debugMode && (
+                                <button onClick={() => setActiveTab('debug')} title="Debug Showcase" className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'debug' ? 'bg-purple-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                    <Bug className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                    {!isSidebarCollapsed && "Debug Showcase"}
+                                </button>
+                            )}
                         </nav>
 
                         <div className="p-3 border-t border-gray-800">
@@ -157,6 +166,7 @@ function App() {
                         {activeTab === 'ba' && <BaPanel t={t} />}
                         {activeTab === 'wireless-capture' && <WirelessCapturePanel active={activeTab === 'wireless-capture'} />}
                         {activeTab === 'editor' && <NodeEditor t={t} />}
+                        {activeTab === 'debug' && debugMode && <DebugPanel />}
                         {activeTab === 'settings' && (
                             <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm max-w-2xl transition-colors duration-300">
                                 <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">{t.appSettings}</h2>
@@ -243,6 +253,24 @@ function App() {
                                                     </select>
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    {/* Debug Settings */}
+                                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                                        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                            <Bug size={20} />
+                                            Debug
+                                        </h3>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                Enable Debug Mode & Component Showcase
+                                            </div>
+                                            <Toggle
+                                                label=""
+                                                checked={debugMode}
+                                                onChange={(checked) => setDebugMode(checked)}
+                                            />
                                         </div>
                                     </div>
 
