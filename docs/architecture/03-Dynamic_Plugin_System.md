@@ -2,14 +2,14 @@
 
 > **目标**: 解除 Core 工具更新与 Platform 代码发布之间的强耦合。
 > **现状**: 需要手动编写 Manager 和 App 路由 (Manager Hell)。
-> **未来**: 基于元数据的自动发现与动态 UI 生成。
+> **未来**: 基于元数据的自动发现与组件化的 UI 构建。
 
 ## 0. 核心设计哲学 (Core Philosophy)
 
 本架构旨在建立一种绝对的**正交 (Orthogonal)** 关系：
 
 $$
-\text{Nexus System} = \text{Pure Logic (Core)} \times \text{Universal Routing (Platform)} \times \text{Hybrid Interaction (Frontend)}
+\text{Nexus System} = \text{Pure Logic (Core)} \times \text{Universal Routing (Platform)} \times \text{Explicit Interaction (Frontend)}
 $$
 
 1.  **工具即逻辑 (Tool is Logic)**: 
@@ -20,8 +20,8 @@ $$
     *   它是通用的**反射路由器**：接收 ID，反射调用，透传结果。
 3.  **UI即画皮 (UI is Skin)**: 
     *   前端负责呈现与交互。
-    *   简单的工具自动生成界面 (Level 1)。
-    *   复杂的工具定制界面 (Level 2)，但仍然通过通用通道与后端对话。
+    *   **显式设计 (Explicit Design)**: 摒弃自动生成，追求极致的掌控力。
+    *   **组件赋能**: 通过 `NexusUI` 组件库实现“积木式”开发，平衡效率与体验。
 
 ## 1. 架构演进路线
 
