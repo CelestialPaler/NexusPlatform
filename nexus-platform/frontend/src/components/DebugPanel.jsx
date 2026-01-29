@@ -5,6 +5,11 @@ import {
     Tooltip, LogConsole, ConfirmModal, StatCard,
     Badge, Tabs, Spinner, Skeleton, Accordion, Table, useToast
 } from './nexus-ui';
+import { 
+    LineChart, BoxChart, HeatMap, BarChart, 
+    AreaChart, ScatterChart, PieChart, Histogram, 
+    Surface3DChart, WaterfallChart 
+} from './nexus-charts';
 import { Activity, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 const DebugPanel = () => {
@@ -248,6 +253,125 @@ const DebugPanel = () => {
                         { name: 'Server-Main', ip: '10.0.0.1', status: 'Online' },
                     ]}
                 />
+            </section>
+
+            {/* Charts */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Data Visualization (NexusCharts)</h3>
+                
+                {/* Row 1: Basic Charts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <LineChart 
+                            title="Latency Trend (Live)"
+                            xLabel="Time"
+                            yLabel="ms"
+                            series={[
+                                { name: "Ping", color: "#3b82f6", x: [1,2,3,4,5], y: [10, 15, 13, 17, 22] },
+                                { name: "Jitter", color: "#f59e0b", x: [1,2,3,4,5], y: [2, 3, 1, 4, 3] }
+                            ]}
+                        />
+                    </div>
+                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <BoxChart 
+                            title="Latency Distribution"
+                            yLabel="Delay (ms)"
+                            dataSeries={[
+                                { name: "WiFi 5G", color: "#10b981", y: [12, 14, 15, 12, 13, 18, 55, 14, 13] },
+                                { name: "WiFi 2.4G", color: "#ef4444", y: [25, 28, 30, 26, 22, 90, 24, 25, 31] }
+                            ]}
+                        />
+                    </div>
+                </div>
+
+                {/* Row 2: Advanced Charts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <BarChart 
+                            title="Channel Utilization"
+                            xLabel="Channel"
+                            yLabel="Load %"
+                            series={[
+                                { name: "Tx", color: "#8b5cf6", x: [1, 6, 11], y: [45, 80, 20] },
+                                { name: "Rx", color: "#ec4899", x: [1, 6, 11], y: [30, 60, 10] }
+                            ]}
+                            stacked
+                        />
+                    </div>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <PieChart 
+                            title="Frame Types"
+                            donut
+                            data={[{
+                                labels: ['Mgmt', 'Control', 'Data'],
+                                values: [15, 30, 55],
+                                name: 'Frames'
+                            }]}
+                        />
+                    </div>
+                     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <ScatterChart 
+                            title="RSSI vs Distance"
+                            xLabel="Distance (m)"
+                            yLabel="RSSI (dBm)"
+                            series={[
+                                { name: "AP-1", color: "#3b82f6", x: [1, 2, 5, 10, 20], y: [-30, -45, -60, -75, -85], size: 12 }
+                            ]}
+                        />
+                    </div>
+                </div>
+
+                {/* Row 3: Scientific Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <Surface3DChart 
+                            title="Antenna Radiation Pattern (Simulation)"
+                            zData={[
+                                [10, 10.6, 12.5],
+                                [10.5, 12, 13],
+                                [11, 12, 12.5]
+                            ]}
+                        />
+                    </div>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <HeatMap 
+                            title="Channel Correlation Matrix"
+                            z={[
+                                [1.0, 0.2, 0.1, 0.05, 0.0],
+                                [0.2, 1.0, 0.8, 0.4, 0.1],
+                                [0.1, 0.8, 1.0, 0.6, 0.2],
+                                [0.05, 0.4, 0.6, 1.0, 0.5],
+                                [0.0, 0.1, 0.2, 0.5, 1.0]
+                            ]}
+                            x={['CH36', 'CH40', 'CH44', 'CH48', 'CH149']}
+                            y={['CH36', 'CH40', 'CH44', 'CH48', 'CH149']}
+                        />
+                    </div>
+                </div>
+
+                {/* Row 4: RF Analysis */}
+                <div className="space-y-4">
+                    <h4 className="font-medium text-gray-500 uppercase tracking-widest text-xs">RF Spectrum Analysis</h4>
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
+                        <WaterfallChart 
+                            title="5G Spectrum Waterfall (Real-time Simulation)"
+                            height="400px"
+                            channels={['36', '40', '44', '48', '149', '153', '157', '161', '165']}
+                            timestamps={['T+0s', 'T+1s', 'T+2s', 'T+3s', 'T+4s', 'T+5s', 'T+6s', 'T+7s', 'T+8s']}
+                            data={[
+                                [-85, -90, -92, -88, -60, -55, -58, -90, -95], // T0 (Top)
+                                [-85, -92, -90, -89, -62, -58, -60, -92, -95],
+                                [-88, -90, -95, -90, -65, -60, -62, -90, -92],
+                                [-82, -85, -88, -85, -50, -45, -48, -85, -88], // Burst
+                                [-82, -84, -86, -84, -52, -48, -50, -84, -86],
+                                [-85, -88, -90, -86, -55, -50, -52, -88, -90],
+                                [-88, -92, -94, -88, -60, -55, -58, -90, -95],
+                                [-90, -95, -96, -90, -70, -65, -68, -95, -98],
+                                [-92, -98, -99, -95, -80, -75, -78, -98, -99]  // T8 (Bottom)
+                            ]}
+                        />
+                    </div>
+                </div>
             </section>
 
             {/* Log Console */}
