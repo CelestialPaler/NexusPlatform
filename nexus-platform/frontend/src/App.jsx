@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import NodeEditor from './components/NodeEditor'
-import Dashboard from './components/Dashboard'
 import IperfPanel from './components/IperfPanel'
 import PingPanel from './components/PingPanel'
 import AdvancedPingPanel from './components/AdvancedPingPanel'
@@ -11,13 +10,16 @@ import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
 import TitleBar from './components/TitleBar'
 import Toggle from './components/Toggle'
-import { Activity, Network, Settings, Moon, Sun, Cpu, Wrench, PlayCircle, Monitor } from 'lucide-react'
+import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight } from 'lucide-react'
 import { translations } from './translations'
 
 function App() {
-    const [activeTab, setActiveTab] = useState('dashboard')
+    const [activeTab, setActiveTab] = useState('tools')
     const [lang, setLang] = useState('en')
     const [theme, setTheme] = useState('light')
+
+    // UI Structure State
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
     // Display Settings
     const [displayMode, setDisplayMode] = useState('windowed')
@@ -106,41 +108,46 @@ function App() {
 
             <div className="flex flex-1 overflow-hidden relative">
                 {!isStandalone && (
-                    <div className="w-64 flex-shrink-0 bg-gray-900 border-r border-gray-800 p-4 flex flex-col">
-                        <div className="text-xl font-bold mb-8 text-blue-400 flex items-center gap-2">
+                    <div className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300`}>
+                        <div className={`flex items-center h-20 ${isSidebarCollapsed ? 'justify-center' : 'px-6 gap-3'}`}>
                            <img src="/images/logo.png" className="w-8 h-8 object-contain" alt="Nexus" />
-                           Nexus Platform
+                           {!isSidebarCollapsed && <span className="text-xl font-bold text-blue-400 whitespace-nowrap">Nexus Platform</span>}
                         </div>
-                        <nav className="flex-1 space-y-2">
-                            <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
-                                <Activity className="mr-3" /> {t.dashboard}
+                        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
+                            <button onClick={() => setActiveTab('tools')} title={t.tools} className={`w-full flex items-center p-3 rounded-lg transition-colors ${['tools', 'iperf', 'ping', 'advanced-ping', 'rtp', 'wireless-capture'].includes(activeTab) ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                <Wrench className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                {!isSidebarCollapsed && (t.tools || 'Tools')}
                             </button>
-                            <button onClick={() => setActiveTab('tools')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${['tools', 'iperf', 'ping', 'advanced-ping', 'rtp', 'wireless-capture'].includes(activeTab) ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
-                                <Wrench className="mr-3" /> {t.tools || 'Tools'}
+                            <button onClick={() => setActiveTab('automation')} title={t.automation} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'automation' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                <PlayCircle className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                {!isSidebarCollapsed && (t.automation || 'Automation')}
                             </button>
-                            <button onClick={() => setActiveTab('automation')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'automation' ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
-                                <PlayCircle className="mr-3" /> {t.automation || 'Automation'}
-                            </button>
-                            <button onClick={() => setActiveTab('editor')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'editor' ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
-                                <Network className="mr-3" /> {t.nodeEditor}
-                            </button>
-                            <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-blue-600' : 'hover:bg-gray-800'}`}>
-                                <Settings className="mr-3" /> {t.settings}
+                            <button onClick={() => setActiveTab('editor')} title={t.nodeEditor} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'editor' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                <Network className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                {!isSidebarCollapsed && t.nodeEditor}
                             </button>
                         </nav>
+
+                        <div className="p-3 border-t border-gray-800">
+                             <div className={`flex items-center ${isSidebarCollapsed ? 'flex-col gap-4' : 'justify-between'}`}>
+                                <button onClick={() => setActiveTab('settings')} title={t.settings} className={`p-2 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'}`}>
+                                    <Settings size={20} />
+                                </button>
+                                
+                                <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-lg hover:bg-gray-800 text-gray-500 hover:text-white transition-colors">
+                                    {isSidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                                </button>
+                             </div>
+                        </div>
                     </div>
                 )}
                 <div className={`flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-300 ${displayMode === 'windowed' ? 'shadow-inner' : ''}`}>
                     {!isStandalone && (
                         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-6 shadow-sm transition-colors duration-300">
                             <h1 className="text-lg font-semibold text-gray-800 dark:text-white capitalize">{t[activeTab] || activeTab}</h1>
-                            <div className="ml-auto flex items-center gap-2">
-                                {theme === 'dark' ? <Moon className="text-yellow-400" size={20} /> : <Sun className="text-orange-500" size={20} />}
-                            </div>
                         </header>
                     )}
                     <main className={`flex-1 ${isStandalone ? 'p-0' : 'p-6'} overflow-auto h-full`}>
-                        {activeTab === 'dashboard' && <Dashboard t={t} />}
                         {activeTab === 'tools' && <ToolsPanel t={t} onSelectTool={setActiveTab} />}
                         {activeTab === 'automation' && <AutomationPanel t={t} />}
                         {activeTab === 'iperf' && <IperfPanel t={t} />}
@@ -231,7 +238,7 @@ function App() {
                                         <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">About</h3>
                                         <div className="flex flex-col items-center text-center space-y-4">
                                             <div className="p-4 rounded-xl">
-                                                <img src="/images/full.png" alt="Nexus Networks" className="h-24 w-auto object-contain bg-white dark:bg-transparent rounded-lg p-2" />
+                                                <img src="/images/full.png" alt="Nexus Networks" className="h-48 w-auto object-contain bg-white dark:bg-transparent rounded-lg p-2" />
                                             </div>
                                             <div>
                                                 <h4 className="text-xl font-bold text-gray-900 dark:text-white">Nexus Platform</h4>
