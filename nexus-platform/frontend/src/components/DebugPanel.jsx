@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import {
     Button, Input, Select, TextArea, Switch,
     Checkbox, Slider, ProgressBar, StatusIndicator,
-    Tooltip, LogConsole, ConfirmModal, StatCard
+    Tooltip, LogConsole, ConfirmModal, StatCard,
+    Badge, Tabs, Spinner, Skeleton, Accordion, Table, useToast
 } from './nexus-ui';
 import { Activity, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 const DebugPanel = () => {
+    const { addToast } = useToast();
     const [sliderValue, setSliderValue] = useState(50);
     const [switchValue, setSwitchValue] = useState(false);
     const [checkboxValue, setCheckboxValue] = useState(true);
@@ -39,10 +41,55 @@ const DebugPanel = () => {
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Stat Cards</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard title="CURRENT LATENCY" value="23" unit="ms" color="blue" />
-                    <StatCard title="AVERAGE" value="25" unit="ms" color="neutral" />
-                    <StatCard title="MIN / MAX" value="18 / 45" unit="ms" color="blue" />
-                    <StatCard title="PACKET LOSS" value="0.05" unit="%" color="red" />
+                    <StatCard 
+                        title="CURRENT LATENCY" 
+                        value="23" 
+                        unit="ms" 
+                        color="blue" 
+                        helpText="Real-time round-trip time."
+                    />
+                    <StatCard 
+                        title="AVERAGE" 
+                        value="25" 
+                        unit="ms" 
+                        color="neutral" 
+                    />
+                    <StatCard 
+                        title="MIN / MAX" 
+                        value="18 / 45" 
+                        unit="ms" 
+                        color="blue" 
+                    />
+                    <StatCard 
+                        title="PACKET LOSS" 
+                        value="0.05" 
+                        unit="%" 
+                        color="red" 
+                        helpText="Percentage of packets lost in the last 100 samples."
+                    />
+                </div>
+            </section>
+
+            {/* Badges & Tabs */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Badges & Tabs</h3>
+                <div className="flex gap-2 mb-4">
+                    <Badge variant="default">Default</Badge>
+                    <Badge variant="secondary">Secondary</Badge>
+                    <Badge variant="outline">Outline</Badge>
+                    <Badge variant="destructive">Critical</Badge>
+                    <Badge variant="success">Online</Badge>
+                    <Badge variant="warning">Warning</Badge>
+                </div>
+                <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <Tabs 
+                        defaultValue="tab1"
+                        items={[
+                            { label: 'Overview', value: 'tab1', content: <div className="p-2">This is the Overview content.</div> },
+                            { label: 'Settings', value: 'tab2', content: <div className="p-2">Adjust your settings here.</div> },
+                            { label: 'Logs', value: 'tab3', content: <div className="p-2">System logs will appear here.</div> },
+                        ]}
+                    />
                 </div>
             </section>
 
@@ -136,6 +183,8 @@ const DebugPanel = () => {
                         <Button variant="secondary">Hover me for Tooltip</Button>
                     </Tooltip>
                     <Button variant="primary" onClick={() => setShowModal(true)}>Open Modal</Button>
+                    <Button variant="outline" onClick={() => addToast('This is a success notification', 'success')}>Toast Success</Button>
+                    <Button variant="danger" onClick={() => addToast('Something went wrong!', 'error')}>Toast Error</Button>
                 </div>
 
                 <ConfirmModal
@@ -147,6 +196,57 @@ const DebugPanel = () => {
                         setShowModal(false);
                     }}
                     onCancel={() => setShowModal(false)}
+                />
+            </section>
+
+            {/* Feedback & Disclosure */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Feedback & Disclosure</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <div className="flex gap-4 items-center">
+                            <Spinner size={32} />
+                            <Spinner size={24} className="text-red-500" />
+                            <div className="space-y-2 w-full">
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <Accordion 
+                            items={[
+                                { title: 'Advanced Settings', content: 'Here are some advanced settings hidden by default.' },
+                                { title: 'Network Logs', content: 'Log data would appear here.' }
+                            ]}
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* Network Inventory */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Network Inventory Table</h3>
+                <Table 
+                    selectable
+                    multiSelect
+                    pagination
+                    pageSize={3}
+                    onSelectionChange={(selected) => console.log('Selection:', selected)}
+                    columns={[
+                        { header: 'Device Name', accessor: 'name', sortable: true },
+                        { header: 'IP Address', accessor: 'ip', sortable: true },
+                        { header: 'Status', accessor: 'status', sortable: true, render: (row) => <Badge variant={row.status === 'Online' ? 'success' : 'destructive'}>{row.status}</Badge> }
+                    ]}
+                    data={[
+                        { name: 'Router-X1', ip: '192.168.1.1', status: 'Online' },
+                        { name: 'Switch-02', ip: '192.168.1.20', status: 'Offline' },
+                        { name: 'AP-Guest', ip: '192.168.10.1', status: 'Online' },
+                        { name: 'Camera-01', ip: '192.168.10.5', status: 'Online' },
+                        { name: 'Camera-02', ip: '192.168.10.6', status: 'Offline' },
+                        { name: 'Printer-Admin', ip: '192.168.1.100', status: 'Online' },
+                        { name: 'Server-Main', ip: '10.0.0.1', status: 'Online' },
+                    ]}
                 />
             </section>
 

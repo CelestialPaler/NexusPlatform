@@ -13,8 +13,17 @@ import TitleBar from './components/TitleBar'
 import Toggle from './components/Toggle'
 import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette, Bug } from 'lucide-react'
 import { translations } from './translations'
+import { ToastProvider } from './components/nexus-ui'
 
 function App() {
+    return (
+        <ToastProvider>
+            <AppContent />
+        </ToastProvider>
+    );
+}
+
+function AppContent() {
     const [activeTab, setActiveTab] = useState('tools')
     const [lang, setLang] = useState('en')
     const [theme, setTheme] = useState('light')
@@ -112,41 +121,41 @@ function App() {
                 {!isStandalone && (
                     <div className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300`}>
                         <div className={`flex items-center h-20 ${isSidebarCollapsed ? 'justify-center' : 'px-6 gap-3'}`}>
-                           <img src="/images/logo.png" className="w-8 h-8 object-contain" alt="Nexus" />
-                           {!isSidebarCollapsed && <span className="text-xl font-bold text-blue-400 whitespace-nowrap">Nexus Platform</span>}
+                            <img src="/images/logo.png" className="w-8 h-8 object-contain" alt="Nexus" />
+                            {!isSidebarCollapsed && <span className="text-xl font-bold text-blue-400 whitespace-nowrap">Nexus Platform</span>}
                         </div>
                         <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
                             <button onClick={() => setActiveTab('tools')} title={t.tools} className={`w-full flex items-center p-3 rounded-lg transition-colors ${['tools', 'iperf', 'ping', 'advanced-ping', 'rtp', 'wireless-capture'].includes(activeTab) ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                <Wrench className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                <Wrench className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && (t.tools || 'Tools')}
                             </button>
                             <button onClick={() => setActiveTab('automation')} title={t.automation} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'automation' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                <PlayCircle className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                <PlayCircle className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && (t.automation || 'Automation')}
                             </button>
                             <button onClick={() => setActiveTab('editor')} title={t.nodeEditor} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'editor' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                <Network className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                <Network className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && t.nodeEditor}
                             </button>
 
                             {debugMode && (
                                 <button onClick={() => setActiveTab('debug')} title="Debug Showcase" className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'debug' ? 'bg-purple-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                    <Bug className={isSidebarCollapsed ? '' : 'mr-3'} /> 
+                                    <Bug className={isSidebarCollapsed ? '' : 'mr-3'} />
                                     {!isSidebarCollapsed && "Debug Showcase"}
                                 </button>
                             )}
                         </nav>
 
                         <div className="p-3 border-t border-gray-800">
-                             <div className={`flex items-center ${isSidebarCollapsed ? 'flex-col gap-4' : 'justify-between'}`}>
+                            <div className={`flex items-center ${isSidebarCollapsed ? 'flex-col gap-4' : 'justify-between'}`}>
                                 <button onClick={() => setActiveTab('settings')} title={t.settings} className={`p-2 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'}`}>
                                     <Settings size={20} />
                                 </button>
-                                
+
                                 <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-lg hover:bg-gray-800 text-gray-500 hover:text-white transition-colors">
                                     {isSidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                                 </button>
-                             </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -220,8 +229,8 @@ function App() {
                                                     <button
                                                         onClick={() => handleDisplayChange('windowed', resolution)}
                                                         className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${displayMode === 'windowed'
-                                                                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                                             }`}
                                                     >
                                                         Windowed
@@ -229,8 +238,8 @@ function App() {
                                                     <button
                                                         onClick={() => handleDisplayChange('fullscreen', resolution)}
                                                         className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${displayMode === 'fullscreen'
-                                                                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                                             }`}
                                                     >
                                                         Fullscreen
