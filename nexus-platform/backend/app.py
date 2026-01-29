@@ -59,6 +59,7 @@ from backend.managers.version import VersionManager
 # from backend.managers.ba import BaManager
 from backend.managers.automation import AutomationManager
 from backend.managers.wireless_capture import WirelessCaptureManager
+from backend.managers.universal import UniversalManager
 
 class Api:
     def __init__(self):
@@ -83,6 +84,7 @@ class Api:
         # self._ba_manager = BaManager(self.base_dir)
         self._automation_manager = AutomationManager(self.base_dir)
         self._wireless_capture_manager = WirelessCaptureManager(self.base_dir)
+        self._universal_manager = UniversalManager(self.base_dir)
 
     def set_window(self, window):
         """Set the global window reference."""
@@ -204,6 +206,22 @@ class Api:
         print(f"Executing task {task_id}...")
         time.sleep(1)
         return {"status": "success", "result": f"Task {task_id} completed at {time.strftime('%H:%M:%S')}"}
+
+    # --- Universal Tool System ---
+    def universal_invoke(self, tool_id, action, payload=None):
+        """
+        Universal entry point for all DPS tools.
+        Platform acts as a router here.
+        """
+        if payload is None:
+            payload = {}
+        return self._universal_manager.invoke(tool_id, action, payload)
+
+    def universal_get_metadata(self):
+        """
+        Get metadata for all available universal tools.
+        """
+        return self._universal_manager.get_all_tools_metadata()
 
     # --- iPerf Integration ---
     def get_iperf_versions(self):
