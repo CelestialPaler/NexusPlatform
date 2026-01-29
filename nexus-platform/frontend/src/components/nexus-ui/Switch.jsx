@@ -11,7 +11,7 @@ const Switch = React.forwardRef(({ label, error, className, wrapperClassName, he
         <div className={cn("w-full flex items-center justify-between", wrapperClassName)}>
              <div className="flex flex-col mr-4">
                 {label && (
-                    <label className="text-sm font-medium text-gray-300">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {label}
                     </label>
                 )}
@@ -27,7 +27,7 @@ const Switch = React.forwardRef(({ label, error, className, wrapperClassName, he
                 ref={ref}
                 className={cn(
                     "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2",
-                    checked ? "bg-blue-600" : "bg-gray-700",
+                    checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     className
                 )}
