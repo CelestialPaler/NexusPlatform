@@ -50,10 +50,17 @@ import webview
 import random
 import time
 import ctypes
+from ctypes import wintypes
+
+class MARGINS(ctypes.Structure):
+    _fields_ = [("cxLeftWidth", ctypes.c_int),
+                ("cxRightWidth", ctypes.c_int),
+                ("cyTopHeight", ctypes.c_int),
+                ("cyBottomHeight", ctypes.c_int)]
+
 from backend.utils.window_manager import WindowManager
 from backend.managers.settings import SettingsManager
 from backend.managers.iperf import IperfManager
-from backend.managers.ping import PingManager
 from backend.managers.version import VersionManager
 # from backend.managers.rtp import RtpManager
 # from backend.managers.ba import BaManager
@@ -78,13 +85,15 @@ class Api:
         # Initialize Managers
         self._settings_manager = SettingsManager(self.base_dir)
         self._iperf_manager = IperfManager(self.base_dir)
-        self._ping_manager = PingManager(self.base_dir)
         self._version_manager = VersionManager(self.base_dir)
         # self._rtp_manager = RtpManager(self.base_dir)
         # self._ba_manager = BaManager(self.base_dir)
         self._automation_manager = AutomationManager(self.base_dir)
         self._wireless_capture_manager = WirelessCaptureManager(self.base_dir)
         self._universal_manager = UniversalManager(self.base_dir)
+        
+        # State Tracking
+        self._is_fullscreen = False
 
     def set_window(self, window):
         """Set the global window reference."""
@@ -122,6 +131,167 @@ class Api:
             return True
         except Exception as e:
             logging.error(f"Failed to open tool window: {e}")
+            return False
+
+    def set_window_size(self, width, height):
+        """Set the size of the active window(s)."""
+        try:
+            for window in self._window_manager.windows:
+                try:
+                    # If we are strictly setting a size, we assume we want to exit fullscreen
+                    if self._is_fullscreen:
+                        window.toggle_fullscreen()
+                        self._is_fullscreen = False
+                         
+                    window.resize(width, height)
+                except Exception as w_err:
+                     logging.warning(f"Window resize failed for {window}: {w_err}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to resize window: {e}")
+            return False
+
+    def set_fullscreen(self, fullscreen):
+        """Set fullscreen mode for the active window(s)."""
+        try:
+            # Idempotency check using internal state
+            if fullscreen == self._is_fullscreen:
+                logging.info(f"Ignored duplicate fullscreen request: {fullscreen}")
+                return True
+
+            for window in self._window_manager.windows:
+                try:
+                    window.toggle_fullscreen()
+                    
+                    # Windows 11 Fullscreen Fix (Remove Rounded Corners & Shadow)
+                    if sys.platform == 'win32':
+                        # Brief delay to allow pywebview to finish its transition
+                        time.sleep(0.05)
+                        self._apply_win32_fullscreen_style(window, fullscreen)
+                        
+                except Exception as w_err:
+                     logging.warning(f"Window fullscreen toggle failed for {window}: {w_err}")
+            
+            # Update state after successful iteration (or at least attempt)
+            self._is_fullscreen = fullscreen
+            logging.info(f"Fullscreen state set to: {self._is_fullscreen}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to set fullscreen: {e}")
+            return False
+
+    def _apply_win32_fullscreen_style(self, window, is_fullscreen):
+        """Apply Windows 11 DWM attributes to remove rounded corners in fullscreen."""
+        try:
+            # Try to get HWND from pywebview window object first (e.g. .handle or .native)
+            hwnd = 0
+            # Depending on pywebview version/backend
+            # For Windows Forms backend, .native is the Control object, checking .Handle property?
+            # Or it might be the HWND int directly.
+            
+            # If native is an object (e.g. BrowserForm), try to get Handle
+            if hasattr(window, 'native'):
+                native_obj = window.native
+                if hasattr(native_obj, 'Handle'):
+                    # .NET Handle is IntPtr (System.IntPtr)
+                    # We need to access its value or cast effectively.
+                    # In pythonnet, IntPtr might need implicit conversion or .ToInt64()?
+                    try:
+                        # Try ToInt32() or ToInt64() if available
+                        hwnd = native_obj.Handle.ToInt32()
+                    except:
+                        try:
+                            # Try simple int() or str() then int()
+                            hwnd = int(str(native_obj.Handle))
+                        except:
+                            # Fallback: if it behaves like a number
+                            hwnd = int(native_obj.Handle)
+                else:
+                    try:
+                         # Try direct cast if it's already int-like
+                         hwnd = int(native_obj)
+                    except:
+                        pass
+            
+            if not hwnd:
+                # Fallback to FindWindow
+                logging.warning(f"Could not extract HWND from native object: {window.native if hasattr(window, 'native') else 'None'}. Trying FindWindow.")
+                hwnd = ctypes.windll.user32.FindWindowW(None, window.title)
+            
+            if not hwnd:
+                logging.warning(f"Could not find HWND for window: {window}")
+                return
+
+            logging.info(f"Applying Style to HWND: {hwnd}, Fullscreen: {is_fullscreen}")
+
+            # 1. Corner Preference (DWMWA_WINDOW_CORNER_PREFERENCE = 33)
+            # 0=Default, 1=DoNotRound, 2=Round, 3=SmallRound
+            val = ctypes.c_int(1 if is_fullscreen else 0)
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, 
+                33, 
+                ctypes.byref(val), 
+                4
+            )
+
+            # 2. Window Frame Margins (Shadows)
+            if is_fullscreen:
+                margins = MARGINS(0, 0, 0, 0)
+            else:
+                # Restore shadow for frameless window
+                margins = MARGINS(1, 1, 1, 1)
+                
+            ctypes.windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(margins))
+
+            # 3. Window Styles (WS_THICKFRAME correction)
+            # WS_THICKFRAME = 0x00040000. It adds the resize border (and potentially rounded corners).
+            # We want to remove it in fullscreen.
+            GWL_STYLE = -16
+            WS_THICKFRAME = 0x00040000
+            
+            current_style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)
+            if is_fullscreen:
+                new_style = current_style & ~WS_THICKFRAME
+            else:
+                new_style = current_style | WS_THICKFRAME
+                
+            if new_style != current_style:
+                ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, new_style)
+
+            # 4. Force Redraw
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0027)
+            
+        except Exception as e:
+            logging.error(f"Failed to apply Win32 style: {e}")
+
+    def minimize_window(self):
+        """Minimize the active window."""
+        try:
+            for window in self._window_manager.windows:
+                window.minimize()
+            return True
+        except Exception as e:
+            logging.error(f"Failed to minimize window: {e}")
+            return False
+
+    def maximize_window(self):
+        """Maximize the active window (Behaves as Fullscreen per requirements)."""
+        return self.set_fullscreen(True)
+
+    def restore_window(self):
+        """Restore the active window (Behaves as Windowed/Exit Fullscreen per requirements)."""
+        return self.set_fullscreen(False)
+
+    def close_window(self):
+        """Close the application."""
+        try:
+            # Iterate over a copy of the windows set to avoid runtime errors
+            # when windows are removed during iteration.
+            for window in list(self._window_manager.windows):
+                window.destroy()
+            return True
+        except Exception as e:
+            logging.error(f"Failed to close window: {e}")
             return False
 
     def is_admin(self):
@@ -232,15 +402,6 @@ class Api:
 
     def run_iperf(self, config):
         return self._iperf_manager.run(config)
-
-    # --- Ping Integration ---
-    def stop_ping(self, instance_id):
-        logging.info(f"Stopping ping: {instance_id}")
-        return self._ping_manager.stop(instance_id)
-
-    def run_ping(self, config):
-        logging.info(f"Running ping with config: {config}")
-        return self._ping_manager.run(config)
 
     # --- RTP Analysis ---
     def list_pcap_files(self):
@@ -433,8 +594,8 @@ if __name__ == '__main__':
         'Network Analysis Platform', 
         url=entry,
         js_api=api,
-        width=1200, 
-        height=800
+        width=2560, 
+        height=1440
     )
     
     api.set_window(window)

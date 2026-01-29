@@ -17,8 +17,10 @@ if __name__ == '__main__':
         'Network Analysis Platform', 
         url=entry,
         js_api=api,
-        width=1200, 
-        height=800
+        width=2560, 
+        height=1440,
+        frameless=True,
+        easy_drag=False
     )
     api.set_window(window)
     webview.start(debug=False)
