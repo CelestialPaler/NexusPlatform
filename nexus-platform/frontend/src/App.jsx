@@ -10,7 +10,7 @@ import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
 import TitleBar from './components/TitleBar'
 import Toggle from './components/Toggle'
-import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette } from 'lucide-react'
 import { translations } from './translations'
 
 function App() {
@@ -162,8 +162,12 @@ function App() {
                                 <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">{t.appSettings}</h2>
 
                                 <div className="space-y-6">
-                                    <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.language}</label>
+                                    {/* Language Settings */}
+                                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                                        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                            <Globe size={20} />
+                                            {t.language || 'Language'}
+                                        </h3>
                                         <select
                                             value={lang}
                                             onChange={(e) => setLang(e.target.value)}
@@ -174,18 +178,26 @@ function App() {
                                         </select>
                                     </div>
 
-                                    <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                                        <Toggle
-                                            label={t.theme}
-                                            checked={theme === 'dark'}
-                                            onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                                        />
-                                        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                            {theme === 'dark' ? t.darkMode : t.lightMode}
+                                    {/* Appearance Settings */}
+                                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                                        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                            <Palette size={20} />
+                                            {t.theme || 'Appearance'}
+                                        </h3>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                {theme === 'dark' ? t.darkMode : t.lightMode}
+                                            </div>
+                                            <Toggle
+                                                label={t.theme}
+                                                checked={theme === 'dark'}
+                                                onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                                            />
                                         </div>
                                     </div>
 
-                                    <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+                                    {/* Display Settings */}
+                                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                                         <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4 flex items-center gap-2">
                                             <Monitor size={20} />
                                             Display
@@ -234,7 +246,8 @@ function App() {
                                         </div>
                                     </div>
 
-                                    <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+                                    {/* About Section */}
+                                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                                         <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">About</h3>
                                         <div className="flex flex-col items-center text-center space-y-4">
                                             <div className="p-4 rounded-xl">
