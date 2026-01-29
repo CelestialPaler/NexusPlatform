@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-    Button, Input, Select, TextArea, Switch, 
+import {
+    Button, Input, Select, TextArea, Switch,
     Checkbox, Slider, ProgressBar, StatusIndicator,
-    Tooltip, LogConsole, ConfirmModal
+    Tooltip, LogConsole, ConfirmModal, StatCard
 } from './nexus-ui';
 import { Activity, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
@@ -35,6 +35,17 @@ const DebugPanel = () => {
                 </div>
             </section>
 
+            {/* Stat Cards */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Stat Cards</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard title="CURRENT LATENCY" value="23" unit="ms" color="blue" />
+                    <StatCard title="AVERAGE" value="25" unit="ms" color="neutral" />
+                    <StatCard title="MIN / MAX" value="18 / 45" unit="ms" color="blue" />
+                    <StatCard title="PACKET LOSS" value="0.05" unit="%" color="red" />
+                </div>
+            </section>
+
             {/* Buttons */}
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Buttons</h3>
@@ -52,15 +63,15 @@ const DebugPanel = () => {
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Form Inputs</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input 
-                        label="Text Input" 
-                        placeholder="Type something..." 
+                    <Input
+                        label="Text Input"
+                        placeholder="Type something..."
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         helpText="Basic text input field"
                     />
-                    <Select 
-                        label="Select Dropdown" 
+                    <Select
+                        label="Select Dropdown"
                         value={selectValue}
                         onChange={(e) => setSelectValue(e.target.value)}
                         options={[
@@ -69,22 +80,22 @@ const DebugPanel = () => {
                             { value: 'option3', label: 'Option 3' },
                         ]}
                     />
-                    <TextArea 
-                        label="Text Area" 
-                        placeholder="Enter description..." 
+                    <TextArea
+                        label="Text Area"
+                        placeholder="Enter description..."
                         className="h-24"
                     />
                     <div className="space-y-6">
-                         <Switch 
-                            label="Toggle Switch" 
-                            checked={switchValue} 
+                        <Switch
+                            label="Toggle Switch"
+                            checked={switchValue}
                             onChange={setSwitchValue}
                             helpText={switchValue ? "ON" : "OFF"}
                         />
-                        <Checkbox 
-                            label="Checkbox Option" 
-                            checked={checkboxValue} 
-                            onChange={setCheckboxValue} 
+                        <Checkbox
+                            label="Checkbox Option"
+                            checked={checkboxValue}
+                            onChange={setCheckboxValue}
                         />
                     </div>
                 </div>
@@ -94,40 +105,40 @@ const DebugPanel = () => {
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Sliders & Progress</h3>
                 <div className="space-y-6 max-w-lg">
-                    <Slider 
-                        label="Volume" 
-                        value={sliderValue} 
-                        onChange={setSliderValue} 
-                        min={0} 
-                        max={100} 
-                        unit="%" 
+                    <Slider
+                        label="Volume"
+                        value={sliderValue}
+                        onChange={setSliderValue}
+                        min={0}
+                        max={100}
+                        unit="%"
                     />
-                    <ProgressBar 
-                        value={sliderValue} 
-                        label="Download Progress" 
-                        showValue 
-                        color="blue" 
+                    <ProgressBar
+                        value={sliderValue}
+                        label="Download Progress"
+                        showValue
+                        color="blue"
                     />
-                    <ProgressBar 
-                        value={75} 
-                        label="System Load" 
-                        color="red" 
+                    <ProgressBar
+                        value={75}
+                        label="System Load"
+                        color="red"
                         size="sm"
                     />
                 </div>
             </section>
 
-             {/* Modals & Overlays */}
-             <section className="space-y-4">
+            {/* Modals & Overlays */}
+            <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Modals & Overlays</h3>
                 <div className="flex gap-4">
-                     <Tooltip content="This is a useful tooltip info">
+                    <Tooltip content="This is a useful tooltip info">
                         <Button variant="secondary">Hover me for Tooltip</Button>
-                     </Tooltip>
-                     <Button variant="primary" onClick={() => setShowModal(true)}>Open Modal</Button>
+                    </Tooltip>
+                    <Button variant="primary" onClick={() => setShowModal(true)}>Open Modal</Button>
                 </div>
-                
-                <ConfirmModal 
+
+                <ConfirmModal
                     isOpen={showModal}
                     title="Debug Modal"
                     message="This is a test confirmation modal. Do you acknowledge?"

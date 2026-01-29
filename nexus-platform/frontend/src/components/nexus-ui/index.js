@@ -14,3 +14,4 @@ export { default as Slider } from './Slider';
 export { default as ProgressBar } from './ProgressBar';
 export { default as StatusIndicator, StatusDot } from './StatusIndicator';
 export { default as ImageViewer } from './ImageViewer';
+export { default as StatCard } from './StatCard';
