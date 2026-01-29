@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Play, Square, Plus, Trash2, Save, Clock, Repeat, Zap, Calendar, ChevronDown, Edit3, GripVertical } from 'lucide-react';
 import TimeInput24 from './TimeInput24';
 import ConditionBuilder from './ConditionBuilder';
-import PromptModal from './common/PromptModal';
-import ConfirmModal from './common/ConfirmModal';
-import Modal from './common/Modal';
-import Input from './common/Input';
-import Select from './common/Select';
-import Button from './common/Button';
-import TextArea from './common/TextArea';
+import PromptModal from './nexus-ui/PromptModal';
+import ConfirmModal from './nexus-ui/ConfirmModal';
+import Modal from './nexus-ui/Modal';
+import Input from './nexus-ui/Input';
+import Select from './nexus-ui/Select';
+import Button from './nexus-ui/Button';
+import TextArea from './nexus-ui/TextArea';
 
 const ScriptPanel = ({ t, taskLibrary = [], actionLibrary = [], currentProfile = 'default', isEditMode = false }) => {
     const [scripts, setScripts] = useState([]);

@@ -6,8 +6,8 @@ import {
     Layout, Check, Clock, Repeat, AlertTriangle, Eye, Edit3, Terminal,
     Zap, Link as LinkIcon, Box, Layers, FileCode, Lock, Unlock
 } from 'lucide-react';
-import ConfirmModal from './common/ConfirmModal';
-import PromptModal from './common/PromptModal';
+import ConfirmModal from './nexus-ui/ConfirmModal';
+import PromptModal from './nexus-ui/PromptModal';
 import Input from './common/Input';
 import Button from './common/Button';
 import Select from './common/Select';

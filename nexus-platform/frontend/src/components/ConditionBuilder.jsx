@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Clock, Calendar, ChevronDown, GripVertical, Layers, Repeat } from 'lucide-react';
 import TimeInput24 from './TimeInput24';
-import Button from './common/Button';
-import Input from './common/Input';
-import Select from './common/Select';
+import Button from './nexus-ui/Button';
+import Input from './nexus-ui/Input';
+import Select from './nexus-ui/Select';
 
 // Global drag state for cross-group DnD
 let globalDragState = null;

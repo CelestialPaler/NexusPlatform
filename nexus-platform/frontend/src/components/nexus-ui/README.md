@@ -8,7 +8,7 @@
 通用按钮组件，支持多种变体和尺寸。
 
 ```jsx
-import Button from './common/Button';
+import Button from './nexus-ui/Button';
 
 <Button variant="primary" onClick={handleClick}>保存</Button>
 <Button variant="danger" icon={Trash2}>删除</Button>
@@ -26,7 +26,7 @@ import Button from './common/Button';
 带样式的输入框，内置标签、错误提示和图标支持。
 
 ```jsx
-import Input from './common/Input';
+import Input from './nexus-ui/Input';
 import { Search } from 'lucide-react';
 
 <Input 
@@ -44,7 +44,7 @@ import { Search } from 'lucide-react';
 替代 `window.prompt`。
 
 ```jsx
-import PromptModal from './common/PromptModal';
+import PromptModal from './nexus-ui/PromptModal';
 
 <PromptModal
     isOpen={showPrompt}
@@ -60,7 +60,7 @@ import PromptModal from './common/PromptModal';
 替代 `window.confirm`。
 
 ```jsx
-import ConfirmModal from './common/ConfirmModal';
+import ConfirmModal from './nexus-ui/ConfirmModal';
 
 <ConfirmModal
     isOpen={showConfirm}

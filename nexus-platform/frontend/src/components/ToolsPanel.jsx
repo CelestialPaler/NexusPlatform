@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Cpu, Network, Activity, BarChart2, Settings, ExternalLink, X, Wifi, Ear } from 'lucide-react';
-import ConfirmModal from './common/ConfirmModal';
-import Button from './common/Button';
+import ConfirmModal from './nexus-ui/ConfirmModal';
+import Button from './nexus-ui/Button';
 
 const RtpLogo = () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -7,8 +7,8 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
     Legend, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
-import Input from './common/Input';
-import Button from './common/Button';
+import Input from './nexus-ui/Input';
+import Button from './nexus-ui/Button';
 
 // --- Sub-components for Clean Code ---
 
