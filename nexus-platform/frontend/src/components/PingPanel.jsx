@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Play, Square, Plus, Trash2, Activity, Settings, 
-    Terminal, BarChart2, Zap, X, Clock, Database 
+    BarChart2 
 } from 'lucide-react';
 import { 
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-    Legend, ResponsiveContainer, AreaChart, Area 
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
+    ResponsiveContainer 
 } from 'recharts';
-import Input from './nexus-ui/Input';
-import Button from './nexus-ui/Button';
 
-// --- Sub-components for Clean Code ---
+import { Input, Button, LogConsole } from './nexus-ui';
+import UniversalDriver from '../utils/UniversalDriver';
+
+const TOOL_ID = 'nexus.network.ping';
+
+// --- Sub-components ---
 
 const StatsCard = ({ label, value, unit, color = "text-blue-500" }) => (
     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border dark:border-gray-700 shadow-sm flex flex-col items-center justify-center min-w-[100px]">
@@ -22,60 +25,37 @@ const StatsCard = ({ label, value, unit, color = "text-blue-500" }) => (
     </div>
 );
 
-const LogTerminal = ({ logs }) => {
-    const endRef = useRef(null);
-    
-    useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [logs]);
-
-    return (
-        <div className="bg-gray-950 text-gray-300 font-mono text-xs p-3 rounded-lg shadow-inner overflow-auto h-full border border-gray-800">
-            {logs.length === 0 && <div className="text-gray-600 italic">Ready to capture...</div>}
-            {logs.map((log, i) => (
-                <div key={i} className="whitespace-pre-wrap hover:bg-gray-900/50 px-1 border-l-2 border-transparent hover:border-blue-500">
-                    <span className="text-gray-600 select-none mr-2">[{new Date().toLocaleTimeString()}]</span>
-                    {log}
-                </div>
-            ))}
-            <div ref={endRef} />
-        </div>
-    );
-};
-
-// --- Single Instance Logic ---
+// --- Single Instance View ---
 const PingInstanceView = ({ instance, onUpdate, active }) => {
     const [logs, setLogs] = useState([]);
     const [chartData, setChartData] = useState([]);
     const [stats, setStats] = useState({ min: 0, max: 0, avg: 0, current: 0, sent: 0, lost: 0 });
 
-    // Event Listening
     useEffect(() => {
-        const handleLog = (e) => {
-            if (e.detail.id === instance.id) {
-                // Parse log for simple stats if needed, or just append
-                const msg = e.detail.data;
-                setLogs(prev => [...prev, msg].slice(-200)); // Keep last 200 logs
+        // Subscribe to events using UniversalDriver
+        // Events are: nexus.network.ping:ping-log
+        // Note: PingTool still emits 'ping-log' derived from callback('ping-log', ...)
+        const unsubLog = UniversalDriver.on(TOOL_ID, 'ping-log', (payload) => {
+            if (payload.id === instance.id) {
+                setLogs(prev => [...prev, payload.data].slice(-500));
             }
-        };
-        const handleData = (e) => {
-            if (e.detail.id === instance.id) {
-                const point = e.detail.data;
+        });
+
+        const unsubData = UniversalDriver.on(TOOL_ID, 'ping-data', (payload) => {
+            if (payload.id === instance.id) {
+                const point = payload.data;
                 const lat = point.latency || 0;
                 
                 setChartData(prev => {
-                    const newData = [...prev, { time: point.timestamp, latency: lat }];
-                    return newData.slice(-60); // Keep last 60 points (~1 min if 1s interval)
+                    const newData = [...prev, { time: new Date().toLocaleTimeString(), latency: lat }];
+                    return newData.slice(-60); 
                 });
 
                 // Update Stats
                 setStats(s => {
                     const newSent = s.sent + 1;
                     const newLost = point.error ? s.lost + 1 : s.lost;
-                    const validLatency = point.error ? s.current : lat; // Don't ruin avg with 0/null
                     
-                    // Simple running avg approximation or recalc from chartData? 
-                    // Let's do simple current/min/max logic
                     const newMin = (s.min === 0 || (lat < s.min && !point.error)) ? lat : s.min;
                     const newMax = lat > s.max ? lat : s.max;
                     
@@ -86,240 +66,235 @@ const PingInstanceView = ({ instance, onUpdate, active }) => {
                         lost: newLost,
                         min: newMin,
                         max: newMax,
-                        avg: Math.round((s.avg * s.sent + lat) / (s.sent + 1)) // Approx
+                        avg: s.sent === 0 ? lat : Math.round((s.avg * s.sent + lat) / (s.sent + 1)) 
                     };
                 });
             }
-        };
-        const handleDone = (e) => {
-            if (e.detail.id === instance.id) onUpdate(instance.id, { status: 'idle' });
-        };
-        
-        window.addEventListener('ping-log', handleLog);
-        window.addEventListener('ping-data', handleData);
-        window.addEventListener('ping-done', handleDone);
+        });
+
+        const unsubDone = UniversalDriver.on(TOOL_ID, 'ping-done', (payload) => {
+            if (payload.id === instance.id) {
+                onUpdate(instance.id, { status: 'idle' });
+            }
+        });
 
         return () => {
-            window.removeEventListener('ping-log', handleLog);
-            window.removeEventListener('ping-data', handleData);
-            window.removeEventListener('ping-done', handleDone);
+            unsubLog();
+            unsubData();
+            unsubDone();
         };
-    }, [instance.id]);
-
-    const handleRun = async () => {
-        // Clear previous run data
-        setLogs([]);
-        setChartData([]);
-        setStats({ min: 0, max: 0, avg: 0, current: 0, sent: 0, lost: 0 });
-
-        if (window.pywebview) {
-            const res = await window.pywebview.api.run_ping({ ...instance.config, id: instance.id });
-            if (res.status === 'started') {
-                onUpdate(instance.id, { status: 'running' });
-            }
-        }
-    };
+    }, [instance.id, onUpdate]);
 
     const handleStop = async () => {
-        if (window.pywebview) {
-            await window.pywebview.api.stop_ping(instance.id);
-        }
+        await UniversalDriver.invoke(TOOL_ID, 'stop', { instance_id: instance.id });
         onUpdate(instance.id, { status: 'idle' });
     };
 
-    const isRunning = instance.status === 'running';
+    if (!active) return null;
 
     return (
-        <div className={`flex-1 flex flex-col gap-4 p-4 h-full overflow-hidden ${active ? '' : 'hidden'}`}>
-            
-            {/* 1. Configuration Bar & Stats Hybrid */}
-            <div className="flex gap-4 items-stretch h-24 shrink-0">
-                {/* Config Form */}
-                <div className="flex-[2] bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 shadow-sm flex items-end gap-3">
-                     <div className="flex-1">
-                        <Input 
-                            label="Target Host" 
-                            value={instance.config.host} 
-                            onChange={e => onUpdate(instance.id, { config: { ...instance.config, host: e.target.value }})}
-                            disabled={isRunning}
-                            placeholder="e.g. 8.8.8.8"
-                            icon={Database}
-                        />
-                     </div>
-                     <div className="w-24">
-                        <Input 
-                            label="Interval" 
-                            type="number"
-                            value={instance.config.interval || 1} 
-                            onChange={e => onUpdate(instance.id, { config: { ...instance.config, interval: parseFloat(e.target.value) }})}
-                            disabled={isRunning}
-                            icon={Clock}
-                        />
-                     </div>
-                     <div className="w-24">
-                        <Input 
-                            label="Size" 
-                            type="number"
-                            value={instance.config.size || 32} 
-                            onChange={e => onUpdate(instance.id, { config: { ...instance.config, size: parseInt(e.target.value) }})}
-                            disabled={isRunning}
-                        />
-                     </div>
-                     <div className="pb-[2px]">
-                        {!isRunning ? (
-                            <Button onClick={handleRun} variant="primary" icon={Play} className="h-[42px] px-6">Run</Button>
-                        ) : (
-                            <Button onClick={handleStop} variant="danger" icon={Square} className="h-[42px] px-6">Stop</Button>
-                        )}
-                     </div>
+        <div className="flex flex-col h-full gap-4">
+            {/* Header / Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <div className="col-span-2 md:col-span-2 flex items-center space-x-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border dark:border-gray-700">
+                    <Activity className={instance.status === 'running' ? "text-green-500 animate-pulse" : "text-gray-400"} size={32} />
+                    <div>
+                        <div className="text-sm text-gray-500">Target Host</div>
+                        <div className="text-xl font-bold font-mono">{instance.config.host}</div>
+                        <div className="text-xs text-gray-400 flex items-center mt-1">
+                            <span className={`w-2 h-2 rounded-full mr-2 ${instance.status === 'running' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                            {instance.status.toUpperCase()}
+                        </div>
+                    </div>
+                </div>
+                <StatsCard label="Current" value={stats.current} unit="ms" />
+                <StatsCard label="Average" value={stats.avg} unit="ms" />
+                <StatsCard label="Min/Max" value={`${stats.min}/${stats.max}`} unit="ms" />
+                <StatsCard label="Packet Loss" value={stats.lost} unit="pkt" color="text-red-500" />
+            </div>
+
+            {/* Main Content: Chart + Log */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
+                {/* Chart Area */}
+                <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 border dark:border-gray-700 shadow-sm flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-gray-500 flex items-center">
+                            <BarChart2 size={16} className="mr-2" />
+                            Latency History
+                        </h3>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorLat" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
+                                <XAxis dataKey="time" hide />
+                                <YAxis domain={[0, 'auto']} stroke="#9ca3af" fontSize={12} />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }}
+                                    itemStyle={{ color: '#60a5fa' }}
+                                />
+                                <Area type="monotone" dataKey="latency" stroke="#3b82f6" fillOpacity={1} fill="url(#colorLat)" isAnimationActive={false} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
-                {/* Live Stats */}
-                <div className="flex-1 flex gap-2">
-                    <StatsCard label="Current" value={stats.current} unit="ms" color="text-green-500" />
-                    <StatsCard label="Average" value={stats.avg} unit="ms" />
-                    <StatsCard label="Loss" value={stats.sent > 0 ? ((stats.lost/stats.sent)*100).toFixed(0) : 0} unit="%" color="text-red-500" />
+                {/* Log Area */}
+                <div className="lg:col-span-1 h-full min-h-0 flex flex-col">
+                     <LogConsole logs={logs} height="h-full" className="flex-1" />
                 </div>
             </div>
 
-            {/* 2. Main Chart Area */}
-            <div className="flex-[3] bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 shadow-sm flex flex-col min-h-0 relative group">
-                <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="bg-gray-100 dark:bg-gray-700 text-xs px-2 py-1 rounded">Real-time Latency (ms)</span>
+            {/* Helper Actions */}
+            {instance.status === 'running' && (
+                <div className="flex justify-end">
+                    <Button variant="danger" onClick={handleStop} icon={Square}>Stop Process</Button>
                 </div>
-                <div className="flex-1 w-full h-full p-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
-                            <XAxis dataKey="time" hide />
-                            <YAxis domain={[0, 'auto']} hide />
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                                itemStyle={{ color: '#60a5fa' }}
-                            />
-                            <Area 
-                                type="monotone" 
-                                dataKey="latency" 
-                                stroke="#3b82f6" 
-                                strokeWidth={2}
-                                fillOpacity={1} 
-                                fill="url(#colorLatency)" 
-                                isAnimationActive={false}
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* 3. Log Output */}
-            <div className="h-48 shrink-0 flex flex-col gap-2">
-                <div className="flex justify-between items-center px-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-2">
-                        <Terminal size={12} /> Execution Log
-                    </h3>
-                    <button className="text-xs text-blue-500 hover:text-blue-400" onClick={() => setLogs([])}>Clear</button>
-                </div>
-                <LogTerminal logs={logs} />
-            </div>
-
+            )}
         </div>
     );
 };
 
-// --- Main Layout ---
+// --- Main Panel ---
+export default function PingPanel() {
+    const [instances, setInstances] = useState([]);
+    const [activeInstanceId, setActiveInstanceId] = useState(null);
+    const [target, setTarget] = useState('8.8.8.8');
 
-const PingPanel = ({ t }) => {
-    // Session State
-    const [instances, setInstances] = useState([
-        { id: 'default-1', status: 'idle', config: { host: '8.8.8.8', interval: 1, size: 32 } }
-    ]);
-    const [activeTabId, setActiveTabId] = useState('default-1');
-
-    // Instance Management
-    const addInstance = () => {
+    // Create a default instance
+    const handleStart = async () => {
+        if (!target) return;
+        
         const newId = `ping-${Date.now()}`;
-        setInstances([...instances, { id: newId, status: 'idle', config: { host: '8.8.8.8', interval: 1 } }]);
-        setActiveTabId(newId);
+        const newInstance = {
+            id: newId,
+            status: 'running',
+            config: { host: target, id: newId } // Pass ID in config for backend
+        };
+
+        setInstances(prev => [...prev, newInstance]);
+        setActiveInstanceId(newId);
+
+        try {
+            // Call via UniversalDriver
+            const res = await UniversalDriver.invoke(TOOL_ID, 'run', newInstance.config);
+            if (res.status === 'error') {
+                 console.error("Failed to start ping:", res.message);
+                 // Handle error updates
+            }
+        } catch (e) {
+            console.error("Driver error:", e);
+        }
     };
 
-    const removeInstance = (id, e) => {
+    const handleUpdateInstance = (id, updates) => {
+        setInstances(prev => prev.map(inst => inst.id === id ? { ...inst, ...updates } : inst));
+    };
+
+    const handleRemove = async (id, e) => {
         e.stopPropagation();
-        if (instances.length === 1) return; // Don't delete last one
-        const newD = instances.filter(i => i.id !== id);
-        setInstances(newD);
-        if (activeTabId === id) setActiveTabId(newD[0].id);
-    };
-
-    const updateInstance = (id, data) => {
-        setInstances(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+        // Ensure stopped
+        await UniversalDriver.invoke(TOOL_ID, 'stop', { instance_id: id });
+        setInstances(prev => {
+            const next = prev.filter(i => i.id !== id);
+            if (activeInstanceId === id) setActiveInstanceId(next.length > 0 ? next[0].id : null);
+            return next;
+        });
     };
 
     return (
-        <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 overflow-hidden">
-            {/* Header / Title Bar */}
-            <div className="h-14 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center px-4 justify-between shrink-0 z-10 shadow-sm">
+        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900/50">
+            {/* Toolbar */}
+            <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-end space-x-4 shadow-sm">
+                <Input 
+                    label="Target Host" 
+                    placeholder="IP or Domain" 
+                    value={target} 
+                    onChange={e => setTarget(e.target.value)}
+                    wrapperClassName="w-64"
+                    onKeyDown={e => e.key === 'Enter' && handleStart()}
+                />
                 
-                {/* Left: Branding & Tabs */}
-                <div className="flex items-center gap-6 overflow-hidden flex-1">
-                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 shrink-0">
-                        <Activity size={24} strokeWidth={2.5} />
-                        <span className="font-bold text-lg tracking-tight">Ping Pilot</span>
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar mask-linear-fade">
-                        {instances.map(inst => (
-                            <div 
-                                key={inst.id}
-                                onClick={() => setActiveTabId(inst.id)}
-                                className={`
-                                    group flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border
-                                    ${activeTabId === inst.id 
-                                        ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300' 
-                                        : 'bg-transparent border-transparent hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-500'}
-                                `}
-                            >
-                                <span className="w-2 h-2 rounded-full transition-colors" 
-                                      style={{ backgroundColor: inst.status === 'running' ? '#10b981' : '#9ca3af' }} />
-                                <span className="whitespace-nowrap max-w-[100px] truncate">{inst.config.host}</span>
-                                {instances.length > 1 && (
-                                    <X size={12} className="opacity-0 group-hover:opacity-100 hover:text-red-500" onClick={(e) => removeInstance(inst.id, e)} />
-                                )}
-                            </div>
-                        ))}
-                        <button onClick={addInstance} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors">
-                            <Plus size={16} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Right: Global Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                   <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-                        <Settings size={18} />
-                   </button>
+                <Button 
+                    variant="primary" 
+                    icon={Play} 
+                    onClick={handleStart}
+                    className="mb-[1px]" // Alignment hack
+                >
+                    Start Ping
+                </Button>
+                
+                <div className="flex-1" />
+                
+                <div className="flex items-center text-sm text-gray-500">
+                    <Settings size={16} className="mr-1" />
+                    <span>Advanced Options</span>
                 </div>
             </div>
 
-            {/* Main Content Body */}
-            <div className="flex-1 relative">
-                {instances.map(inst => (
-                    <PingInstanceView 
-                        key={inst.id} 
-                        instance={inst} 
-                        active={inst.id === activeTabId} 
-                        onUpdate={updateInstance}
-                    />
-                ))}
+            <div className="flex-1 flex overflow-hidden">
+                {/* Sidebar List */}
+                <div className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col overflow-y-auto">
+                    {instances.length === 0 && (
+                        <div className="p-4 text-center text-gray-500 text-sm mt-10">
+                            No active sessions
+                        </div>
+                    )}
+                    {instances.map(inst => (
+                        <div 
+                            key={inst.id}
+                            onClick={() => setActiveInstanceId(inst.id)}
+                            className={`p-3 border-b dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group ${activeInstanceId === inst.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}`}
+                        >
+                            <div className="flex justify-between items-start">
+                                <div className="font-mono font-bold text-sm truncate">{inst.config.host}</div>
+                                <button 
+                                    onClick={(e) => handleRemove(inst.id, e)}
+                                    className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500 mt-1">
+                                {inst.status === 'running' ? (
+                                    <span className="flex items-center text-green-500">
+                                        <Activity size={12} className="mr-1 animate-pulse" /> Running
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center">
+                                        <Square size={12} className="mr-1" /> Stopped
+                                    </span>
+                                )}
+                                <span className="mx-2">|</span>
+                                <span className="font-mono">{inst.id.slice(-6)}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Main View */}
+                <div className="flex-1 p-4 overflow-hidden">
+                    {activeInstanceId ? (
+                        <PingInstanceView 
+                            key={activeInstanceId} 
+                            instance={instances.find(i => i.id === activeInstanceId)} 
+                            onUpdate={handleUpdateInstance}
+                            active={true}
+                        />
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                            <Activity size={48} className="mb-4 opacity-50" />
+                            <p>Select or create a ping session</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
-};
-
-export default PingPanel;
+}
