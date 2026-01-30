@@ -1,7 +1,7 @@
 export const translations = {
     en: {
         dashboard: "Dashboard",
-        tools: "Debug",
+        tools: "Tools",
         automation: "Automation",
         script: "Script",
         nodeEditor: "Node Editor",
@@ -136,7 +136,7 @@ export const translations = {
     },
     zh: {
         dashboard: "仪表盘",
-        tools: "调试",
+        tools: "分析工具",
         automation: "自动化",
         script: "脚本",
         nodeEditor: "节点编辑器",
