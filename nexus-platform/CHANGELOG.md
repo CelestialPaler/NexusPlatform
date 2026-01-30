@@ -2,6 +2,20 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [1.5.0] - 2026-01-30
+
+### 新增 (Added)
+- **NexusCharts**: 引入基于Plotly的高性能科学图表库。
+  - 支持 Line, Box, HeatMap, Bar, Area, Scatter, Pie, Histogram, Surface3D, Waterfall 等10种图表。
+  - 实现全局 ThemeContext，图表自适应深色模式。
+- **Debug Showcase**: 
+  - 重构 Debug 页面为分栏布局 (Controls vs Charts)。
+  - 增加可视化的图表案例展示区域。
+
+### 变更 (Changed)
+- **UI交互**: 将侧边栏 "Tools/工具" 重命名为 "Debug/调试"。
+- **代码规范**: 全局统一前端代码的缩进与换行符 (CRLF/LF)。
+
 ## [1.4.1] - 2026-01-16
 
 ### 重构 (Refactor)
