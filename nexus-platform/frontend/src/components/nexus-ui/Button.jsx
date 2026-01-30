@@ -22,7 +22,7 @@ const sizes = {
     icon: "p-2",
 };
 
-const Button = ({ children, variant = "primary", size = "md", className, disabled, loading, icon: Icon, ...props }) => {
+const Button = ({ children, variant = "primary", size = "md", className, disabled, loading, icon: Icon, iconSize = 18, ...props }) => {
     return (
         <button
             disabled={disabled || loading}
@@ -37,7 +37,7 @@ const Button = ({ children, variant = "primary", size = "md", className, disable
             {loading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
             ) : Icon ? (
-                <Icon size={18} className={children ? "mr-2" : ""} />
+                <Icon size={iconSize} className={children ? "mr-2" : ""} />
             ) : null}
             {children}
         </button>

@@ -99,6 +99,13 @@ const ToolsPanel = ({ t, onSelectTool }) => {
                     enabled: true
                 },
                 {
+                    id: 'channel-analysis',
+                    name: 'Channel Analysis',
+                    icon: <Activity size={48} className="text-purple-600" />,
+                    description: 'Real-time channel usage and interference analysis',
+                    enabled: true
+                },
+                {
                     id: 'advanced-ping',
                     name: 'Advanced Ping Analysis',
                     icon: <PingLogo color="#f97316" />,

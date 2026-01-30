@@ -6,12 +6,14 @@ import AdvancedPingPanel from './components/AdvancedPingPanel'
 import RtpPanel from './components/RtpPanel'
 import BaPanel from './components/BaPanel'
 import WirelessCapturePanel from './components/WirelessCapturePanel'
+import ChannelAnalysisPanel from './components/ChannelAnalysisPanel'
 import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
 import DebugPanel from './components/DebugPanel'
+import DebugToolbarShowcase from './components/DebugToolbarShowcase'
 import TitleBar from './components/TitleBar'
 import Toggle from './components/Toggle'
-import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette, Bug } from 'lucide-react'
+import { Network, Settings, Cpu, Wrench, PlayCircle, Monitor, ChevronLeft, ChevronRight, Globe, Palette, Bug, Layout } from 'lucide-react'
 import { translations } from './translations'
 import { ToastProvider } from './components/nexus-ui'
 import { ThemeProvider, useTheme } from './hooks/useTheme'
@@ -109,6 +111,9 @@ function AppContent() {
         }
     }, [theme])
 
+    // Tools that handle their own header/toolbar
+    const toolsWithCustomHeader = ['advanced-ping', 'channel-analysis', 'debug-toolbar'];
+
     const handleSaveSettings = () => {
         alert(t.saved)
     }
@@ -128,7 +133,7 @@ function AppContent() {
                             {!isSidebarCollapsed && <span className="text-xl font-bold text-blue-400 whitespace-nowrap">Nexus Platform</span>}
                         </div>
                         <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
-                            <button onClick={() => setActiveTab('tools')} title={t.tools} className={`w-full flex items-center p-3 rounded-lg transition-colors ${['tools', 'iperf', 'ping', 'advanced-ping', 'rtp', 'wireless-capture'].includes(activeTab) ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                            <button onClick={() => setActiveTab('tools')} title={t.tools} className={`w-full flex items-center p-3 rounded-lg transition-colors ${['tools', 'iperf', 'ping', 'advanced-ping', 'rtp', 'wireless-capture', 'channel-analysis'].includes(activeTab) ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
                                 <Wrench className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && (t.tools || 'Tools')}
                             </button>
@@ -142,10 +147,16 @@ function AppContent() {
                             </button>
 
                             {debugMode && (
-                                <button onClick={() => setActiveTab('debug')} title="Debug Showcase" className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'debug' ? 'bg-purple-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                    <Bug className={isSidebarCollapsed ? '' : 'mr-3'} />
-                                    {!isSidebarCollapsed && "Debug Showcase"}
-                                </button>
+                                <>
+                                    <button onClick={() => setActiveTab('debug')} title="Debug Showcase" className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'debug' ? 'bg-purple-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                        <Bug className={isSidebarCollapsed ? '' : 'mr-3'} />
+                                        {!isSidebarCollapsed && "Debug Showcase"}
+                                    </button>
+                                    <button onClick={() => setActiveTab('debug-toolbar')} title="Toolbar Showcase" className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'debug-toolbar' ? 'bg-indigo-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                        <Layout className={isSidebarCollapsed ? '' : 'mr-3'} />
+                                        {!isSidebarCollapsed && "Toolbar Showcase"}
+                                    </button>
+                                </>
                             )}
                         </nav>
 
@@ -163,12 +174,12 @@ function AppContent() {
                     </div>
                 )}
                 <div className={`flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-300 ${displayMode === 'windowed' ? 'shadow-inner' : ''}`}>
-                    {!isStandalone && (
+                    {!isStandalone && !toolsWithCustomHeader.includes(activeTab) && (
                         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-6 shadow-sm transition-colors duration-300">
                             <h1 className="text-lg font-semibold text-gray-800 dark:text-white capitalize">{t[activeTab] || activeTab}</h1>
                         </header>
                     )}
-                    <main className={`flex-1 ${isStandalone ? 'p-0' : 'p-6'} overflow-auto h-full`}>
+                    <main className={`flex-1 ${isStandalone ? 'p-0' : (toolsWithCustomHeader.includes(activeTab) ? 'p-0' : 'p-6')} overflow-auto h-full`}>
                         {activeTab === 'tools' && <ToolsPanel t={t} onSelectTool={setActiveTab} />}
                         {activeTab === 'automation' && <AutomationPanel t={t} />}
                         {activeTab === 'iperf' && <IperfPanel t={t} />}
@@ -177,8 +188,10 @@ function AppContent() {
                         {activeTab === 'rtp' && <RtpPanel t={t} />}
                         {activeTab === 'ba' && <BaPanel t={t} />}
                         {activeTab === 'wireless-capture' && <WirelessCapturePanel active={activeTab === 'wireless-capture'} />}
+                        {activeTab === 'channel-analysis' && <ChannelAnalysisPanel t={t} />}
                         {activeTab === 'editor' && <NodeEditor t={t} />}
                         {activeTab === 'debug' && debugMode && <DebugPanel />}
+                        {activeTab === 'debug-toolbar' && debugMode && <DebugToolbarShowcase />}
                         {activeTab === 'settings' && (
                             <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm max-w-2xl transition-colors duration-300">
                                 <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">{t.appSettings}</h2>
@@ -276,7 +289,7 @@ function AppContent() {
                                         </h3>
                                         <div className="flex items-center justify-between">
                                             <div className="text-sm text-gray-600 dark:text-gray-300">
-                                                Enable Debug Mode & Component Showcase
+                                                Enable Debug Mode & Component                     Showcase
                                             </div>
                                             <Toggle
                                                 label=""

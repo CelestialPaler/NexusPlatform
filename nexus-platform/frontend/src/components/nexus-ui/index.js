@@ -25,3 +25,4 @@ export { default as Table } from './Table';
 export { default as ToastProvider, useToast } from './Toast';
 
 
+export { default as ToolToolbar } from './ToolToolbar';
