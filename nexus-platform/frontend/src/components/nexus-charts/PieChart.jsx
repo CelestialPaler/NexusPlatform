@@ -20,7 +20,7 @@ const PieChart = ({ data, title, height = "300px", donut = false }) => {
         hoverinfo: 'label+value+percent',
         marker: {
             // Optional: Define custom colors via d.colors if needed
-            colors: d.colors 
+            colors: d.colors
         }
     }));
 

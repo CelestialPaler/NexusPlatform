@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Plot from 'react-plotly.js';
-import { useTheme } from '../../hooks/useTheme'; 
+import { useTheme } from '../../hooks/useTheme';
 
 /**
  * Base Chart Component using Plotly.js
@@ -14,7 +14,7 @@ import { useTheme } from '../../hooks/useTheme';
 const BaseChart = ({ data, layout, config, height = "100%", className }) => {
     // Detect Dark Mode via Context for reactivity
     const { isDarkMode } = useTheme();
-    
+
     const defaultLayout = useMemo(() => ({
         autosize: true,
         paper_bgcolor: 'rgba(0,0,0,0)', // Transparent

@@ -45,30 +45,30 @@ const DebugPanel = () => {
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Stat Cards</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard 
-                        title="CURRENT LATENCY" 
-                        value="23" 
-                        unit="ms" 
-                        color="blue" 
+                    <StatCard
+                        title="CURRENT LATENCY"
+                        value="23"
+                        unit="ms"
+                        color="blue"
                         helpText="Real-time round-trip time."
                     />
-                    <StatCard 
-                        title="AVERAGE" 
-                        value="25" 
-                        unit="ms" 
-                        color="neutral" 
+                    <StatCard
+                        title="AVERAGE"
+                        value="25"
+                        unit="ms"
+                        color="neutral"
                     />
-                    <StatCard 
-                        title="MIN / MAX" 
-                        value="18 / 45" 
-                        unit="ms" 
-                        color="blue" 
+                    <StatCard
+                        title="MIN / MAX"
+                        value="18 / 45"
+                        unit="ms"
+                        color="blue"
                     />
-                    <StatCard 
-                        title="PACKET LOSS" 
-                        value="0.05" 
-                        unit="%" 
-                        color="red" 
+                    <StatCard
+                        title="PACKET LOSS"
+                        value="0.05"
+                        unit="%"
+                        color="red"
                         helpText="Percentage of packets lost in the last 100 samples."
                     />
                 </div>
@@ -104,15 +104,15 @@ const DebugPanel = () => {
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Form Inputs</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input 
-                        label="Text Input" 
-                        placeholder="Type something..." 
-                        value={inputValue} 
+                    <Input
+                        label="Text Input"
+                        placeholder="Type something..."
+                        value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         helpText="Basic text input field"
                     />
-                    <Select 
-                        label="Select Dropdown" 
+                    <Select
+                        label="Select Dropdown"
                         value={selectValue}
                         onChange={(e) => setSelectValue(e.target.value)}
                         options={[
@@ -121,21 +121,21 @@ const DebugPanel = () => {
                             { value: 'option3', label: 'Option 3' },
                         ]}
                     />
-                    <TextArea 
+                    <TextArea
                         label="Text Area"
                         placeholder="Enter description..."
                         className="h-24"
                     />
                     <div className="space-y-6">
-                        <Switch 
-                            label="Toggle Switch" 
-                            checked={switchValue} 
-                            onChange={setSwitchValue} 
+                        <Switch
+                            label="Toggle Switch"
+                            checked={switchValue}
+                            onChange={setSwitchValue}
                             helpText={switchValue ? "ON" : "OFF"}
                         />
-                        <Checkbox 
-                            label="Checkbox Option" 
-                            checked={checkboxValue} 
+                        <Checkbox
+                            label="Checkbox Option"
+                            checked={checkboxValue}
                             onChange={setCheckboxValue}
                         />
                     </div>
@@ -208,7 +208,7 @@ const DebugPanel = () => {
                         </div>
                     </div>
                     <div>
-                        <Accordion 
+                        <Accordion
                             items={[
                                 { title: 'Advanced Settings', content: 'Here are some advanced settings hidden by default.' },
                                 { title: 'Network Logs', content: 'Log data would appear here.' }
@@ -221,7 +221,7 @@ const DebugPanel = () => {
             {/* Network Inventory */}
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Network Inventory Table</h3>
-                <Table 
+                <Table
                     selectable
                     multiSelect
                     pagination
@@ -260,18 +260,18 @@ const DebugPanel = () => {
             {/* Row 1: Basic Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <LineChart 
+                    <LineChart
                         title="Latency Trend (Live)"
                         xLabel="Time"
                         yLabel="ms"
                         series={[
-                            { name: "Ping", color: "#3b82f6", x: [1,2,3,4,5], y: [10, 15, 13, 17, 22] },
-                            { name: "Jitter", color: "#f59e0b", x: [1,2,3,4,5], y: [2, 3, 1, 4, 3] }
+                            { name: "Ping", color: "#3b82f6", x: [1, 2, 3, 4, 5], y: [10, 15, 13, 17, 22] },
+                            { name: "Jitter", color: "#f59e0b", x: [1, 2, 3, 4, 5], y: [2, 3, 1, 4, 3] }
                         ]}
                     />
                 </div>
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <BoxChart 
+                    <BoxChart
                         title="Latency Distribution"
                         yLabel="Delay (ms)"
                         dataSeries={[
@@ -285,7 +285,7 @@ const DebugPanel = () => {
             {/* Row 2: Advanced Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <BarChart 
+                    <BarChart
                         title="Channel Utilization"
                         xLabel="Channel"
                         yLabel="Load %"
@@ -297,7 +297,7 @@ const DebugPanel = () => {
                     />
                 </div>
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <PieChart 
+                    <PieChart
                         title="Frame Types"
                         donut
                         data={[{
@@ -308,7 +308,7 @@ const DebugPanel = () => {
                     />
                 </div>
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <ScatterChart 
+                    <ScatterChart
                         title="RSSI vs Distance"
                         xLabel="Distance (m)"
                         yLabel="RSSI (dBm)"
@@ -322,7 +322,7 @@ const DebugPanel = () => {
             {/* Row 3: Scientific Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <Surface3DChart 
+                    <Surface3DChart
                         title="Antenna Radiation Pattern (Simulation)"
                         zData={[
                             [10, 10.6, 12.5],
@@ -332,7 +332,7 @@ const DebugPanel = () => {
                     />
                 </div>
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <HeatMap 
+                    <HeatMap
                         title="Channel Correlation Matrix"
                         z={[
                             [1.0, 0.2, 0.1, 0.05, 0.0],
@@ -351,7 +351,7 @@ const DebugPanel = () => {
             <div className="space-y-4">
                 <h4 className="font-medium text-gray-500 uppercase tracking-widest text-xs">RF Spectrum Analysis</h4>
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 dark:bg-gray-800">
-                    <WaterfallChart 
+                    <WaterfallChart
                         title="5G Spectrum Waterfall (Real-time Simulation)"
                         height="400px"
                         channels={['36', '40', '44', '48', '149', '153', '157', '161', '165']}
@@ -376,8 +376,8 @@ const DebugPanel = () => {
     return (
         <div className="p-8 max-w-[1600px] mx-auto pb-20">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Nexus Debug Console</h2>
-            
-            <Tabs 
+
+            <Tabs
                 defaultValue="controls"
                 items={[
                     { label: 'Control Showcase (控件)', value: 'controls', content: renderControls() },

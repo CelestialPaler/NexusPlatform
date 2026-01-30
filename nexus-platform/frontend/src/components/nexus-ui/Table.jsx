@@ -16,16 +16,16 @@ import Button from './Button';
  * @param {boolean} pagination - Enable pagination
  * @param {number} pageSize - Rows per page (default: 10)
  */
-const Table = ({ 
-    columns, 
-    data = [], 
-    onRowClick, 
-    selectable = false, 
+const Table = ({
+    columns,
+    data = [],
+    onRowClick,
+    selectable = false,
     multiSelect = true,
     onSelectionChange,
     pagination = false,
     pageSize = 10,
-    className 
+    className
 }) => {
     // --- State ---
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -36,7 +36,7 @@ const Table = ({
     useEffect(() => {
         setCurrentPage(1);
         setSelectedIds(new Set());
-    }, [data.length]); 
+    }, [data.length]);
 
     // Notify selection changes
     useEffect(() => {
@@ -110,7 +110,7 @@ const Table = ({
         }
         setSelectedIds(newSet);
     };
-    
+
     // Check if all CURRENT PAGE rows are selected
     const isAllPageSelected = paginatedData.length > 0 && paginatedData.every(row => selectedIds.has(row._originalIndex));
 
@@ -125,7 +125,7 @@ const Table = ({
                                 {selectable && (
                                     <th className="px-6 py-3 w-4">
                                         {multiSelect && (
-                                            <Checkbox 
+                                            <Checkbox
                                                 checked={isAllPageSelected}
                                                 onChange={(c) => toggleSelectAllPage(c)}
                                             />
@@ -134,8 +134,8 @@ const Table = ({
                                 )}
 
                                 {columns.map((col, idx) => (
-                                    <th 
-                                        key={idx} 
+                                    <th
+                                        key={idx}
                                         className={cn(
                                             "px-6 py-3 font-semibold tracking-wider whitespace-nowrap select-none",
                                             col.sortable && "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -162,8 +162,8 @@ const Table = ({
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-100">
                             {paginatedData && paginatedData.length > 0 ? (
                                 paginatedData.map((row) => (
-                                    <tr 
-                                        key={row._originalIndex} 
+                                    <tr
+                                        key={row._originalIndex}
                                         onClick={() => onRowClick && onRowClick(row)}
                                         className={cn(
                                             "transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50",
@@ -174,10 +174,10 @@ const Table = ({
                                         {/* Checkbox Cell */}
                                         {selectable && (
                                             <td className="px-6 py-4">
-                                                <Checkbox 
+                                                <Checkbox
                                                     checked={selectedIds.has(row._originalIndex)}
                                                     onChange={() => toggleSelection(row._originalIndex)}
-                                                    onClick={(e) => e.stopPropagation()} 
+                                                    onClick={(e) => e.stopPropagation()}
                                                 />
                                             </td>
                                         )}
@@ -208,17 +208,17 @@ const Table = ({
                         Page {currentPage} of {pageCount} <span className="mx-2 text-gray-300">|</span> Total {data.length} items
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         >
                             <ChevronLeft size={16} />
                         </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             disabled={currentPage === pageCount}
                             onClick={() => setCurrentPage(p => Math.min(pageCount, p + 1))}
                         >

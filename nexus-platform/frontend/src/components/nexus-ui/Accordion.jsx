@@ -12,7 +12,7 @@ export const AccordionItem = ({ title, children, isOpen, onToggle }) => {
                 {title}
                 {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            <div 
+            <div
                 className={cn(
                     "overflow-hidden transition-all duration-300 ease-in-out",
                     isOpen ? "max-h-96 opacity-100 mb-4" : "max-h-0 opacity-0"
@@ -32,10 +32,10 @@ const Accordion = ({ items, allowMultiple = false, className }) => {
 
     const handleToggle = (index) => {
         if (allowMultiple) {
-            setOpenIndexes(prev => 
-                prev.includes(index) 
-                ? prev.filter(i => i !== index)
-                : [...prev, index]
+            setOpenIndexes(prev =>
+                prev.includes(index)
+                    ? prev.filter(i => i !== index)
+                    : [...prev, index]
             );
         } else {
             setOpenIndexes(prev => prev.includes(index) ? [] : [index]);
@@ -45,7 +45,7 @@ const Accordion = ({ items, allowMultiple = false, className }) => {
     return (
         <div className={cn("w-full border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 px-4", className)}>
             {items.map((item, index) => (
-                <AccordionItem 
+                <AccordionItem
                     key={index}
                     title={item.title}
                     isOpen={openIndexes.includes(index)}

@@ -13,12 +13,12 @@ import { cn } from '../../lib/utils';
 const InfoTooltip = ({ content, size = 14, className }) => {
     return (
         <Tooltip content={content}>
-            <HelpCircle 
-                size={size} 
+            <HelpCircle
+                size={size}
                 className={cn(
-                    "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help transition-colors", 
+                    "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-help transition-colors",
                     className
-                )} 
+                )}
             />
         </Tooltip>
     );

@@ -16,7 +16,7 @@ import HeatMap from './HeatMap';
  */
 const WaterfallChart = ({ data, channels, timestamps, title = "RF Spectrum Waterfall", height = "500px" }) => {
     return (
-        <HeatMap 
+        <HeatMap
             title={title}
             z={data}
             x={channels}

@@ -29,7 +29,7 @@ const ToastItem = ({ id, message, type, onClose }) => {
     };
 
     return (
-        <div 
+        <div
             className={cn(
                 "flex items-center gap-3 px-4 py-3 min-w-[300px] max-w-md rounded-lg shadow-lg border transition-all duration-300 transform translate-x-0 opacity-100 mb-2",
                 bgColors[type] || bgColors.info,

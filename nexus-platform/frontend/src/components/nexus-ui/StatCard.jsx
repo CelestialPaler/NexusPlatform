@@ -33,7 +33,7 @@ const StatCard = ({ title, value, unit, color = 'blue', helpText, className }) =
                 </span>
                 {helpText && <InfoTooltip content={helpText} size={12} />}
             </div>
-            
+
             <div className="flex items-baseline gap-1">
                 <span className={cn("text-3xl font-bold font-mono", colors[color] || colors.neutral)}>
                     {value}

@@ -23,8 +23,8 @@ const HeatMap = ({ z, x, y, title, colorscale = 'Viridis', height = "400px", rev
 
     const layout = {
         title: title ? { text: title, x: 0.05 } : undefined,
-        yaxis: { 
-            autorange: reverseY ? 'reversed' : true 
+        yaxis: {
+            autorange: reverseY ? 'reversed' : true
         }
     };
 

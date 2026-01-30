@@ -19,8 +19,8 @@ const ScatterChart = ({ series, title, xLabel, yLabel, height = "300px" }) => {
         mode: 'markers',
         name: s.name,
         text: s.labels, // Optional hover text per point
-        marker: { 
-            color: s.color, 
+        marker: {
+            color: s.color,
             size: s.size || 8,
             symbol: s.symbol || 'circle', // 'circle', 'square', 'diamond', 'cross'
             opacity: 0.7

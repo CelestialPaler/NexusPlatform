@@ -21,10 +21,10 @@ const AreaChart = ({ series, title, xLabel, yLabel, height = "300px", stack = fa
         mode: 'lines', // Area charts usually don't show markers
         name: s.name,
         stackgroup: stack ? 'one' : undefined, // Plotly handles stacking with stackgroup
-        line: { 
-            color: s.color, 
+        line: {
+            color: s.color,
             width: 2,
-            shape: 'spline' 
+            shape: 'spline'
         }
     }));
 

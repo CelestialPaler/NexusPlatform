@@ -16,8 +16,8 @@ const LineChart = ({ series, title, xLabel, yLabel, height = "300px" }) => {
         type: 'scatter', // Plotly uses 'scatter' for lines
         mode: 'lines',   // 'lines', 'markers', or 'lines+markers'
         name: s.name,
-        line: { 
-            color: s.color, 
+        line: {
+            color: s.color,
             width: 2,
             shape: 'spline' // Smooth curves by default? Or 'linear' for accuracy
         }

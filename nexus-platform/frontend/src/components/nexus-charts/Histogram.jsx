@@ -20,7 +20,7 @@ const Histogram = ({ series, title, xLabel, yLabel, height = "300px", orientatio
         type: 'histogram',
         name: s.name,
         orientation: orientation,
-        marker: { 
+        marker: {
             color: s.color,
         },
         opacity: 0.75 // Semi-transparent for overlapping histograms
