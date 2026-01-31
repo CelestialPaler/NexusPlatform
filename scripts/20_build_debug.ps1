@@ -49,6 +49,8 @@ Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
     --onefile `
     --console `
     --clean `
+    --distpath "bin/debug" `
+    --workpath "build/debug" `
     --add-data "dist;dist" `
     --add-data "backend;backend" `
     --add-data "config;config" `

@@ -1,16 +1,27 @@
-<#
+﻿<#
 .SYNOPSIS
     Nexus 自动签名脚本 (Auto Signer)
-    1. 自动检查/创建代码签名证书 (Nexus Developer)
+    1. 自动检查/创建代码签名证书 (Nexus Networks)
     2. 对 dist/NexusPlatform.exe 进行数字签名
     3. 导出公钥用于本地信任
 #>
 
 $ErrorActionPreference = "Stop"
 $CertSubject = "CN=Nexus Networks, O=Negentropy, C=CN"
-# 指向 nexus-platform/dist/NexusPlatform.exe
-$ExePath = "$PSScriptRoot/../nexus-platform/dist/NexusPlatform.exe"
-$CerPath = "$PSScriptRoot/../nexus-platform/dist/NexusNetworks.cer"
+
+# 动态查找最新的 build 目录
+$ReleaseRoot = "$PSScriptRoot/../nexus-platform/bin/release"
+$LatestBuild = Get-ChildItem -Path $ReleaseRoot -Directory | Where-Object { $_.Name -like "NexusPlatform_v*" } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+
+if ($LatestBuild) {
+    $ExePath = "$($LatestBuild.FullName)/NexusPlatform.exe"
+    $CerPath = "$($LatestBuild.FullName)/NexusNetworks.cer"
+    Write-Host "🎯 Targeting Latest Build: $($LatestBuild.Name)" -ForegroundColor Cyan
+} else {
+    Write-Warning "未找到 release 目录，尝试默认路径..."
+    $ExePath = "$PSScriptRoot/../nexus-platform/bin/release/NexusPlatform.exe"
+    $CerPath = "$PSScriptRoot/../nexus-platform/bin/release/NexusNetworks.cer"
+}
 
 Write-Host "🔐 Nexus Auto Signer Initiated..." -ForegroundColor Cyan
 
@@ -20,7 +31,7 @@ $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert | Where-Object { $_.
 if (-not $cert) {
     Write-Host "[-] 未检测到证书，正在创建自签名证书..." -ForegroundColor Yellow
     # 创建有效期 5 年的代码签名证书
-    $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $certSubject -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
+    $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $CertSubject -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
     Write-Host "[+] 证书已创建: $($cert.Thumbprint)" -ForegroundColor Green
 } else {
     Write-Host "[+] 检测到已有证书: $($cert.Thumbprint)" -ForegroundColor Green
