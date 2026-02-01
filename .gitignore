@@ -39,3 +39,5 @@ wheels/
 # Nexus Specific
 temp/
 reports/
+
+bin/

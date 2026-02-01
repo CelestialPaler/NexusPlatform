@@ -44,13 +44,16 @@ $SPEC_FILE = "NexusPlatform_Debug.spec"
 
 Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
 # Note: specific command for Debug (Console=True)
+# paths: Explicitly include local source packages (nexus-core, nexus-sdk)
 & $PYTHON_EXE -m PyInstaller `
     --name "NexusPlatform_Debug" `
     --onefile `
     --console `
     --clean `
-    --distpath "bin/debug" `
+    --distpath "../bin/debug" `
     --workpath "build/debug" `
+    --paths "$ROOT_DIR/nexus-core" `
+    --paths "$ROOT_DIR/nexus-sdk/src" `
     --add-data "dist;dist" `
     --add-data "backend;backend" `
     --add-data "config;config" `
@@ -61,7 +64,7 @@ Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n[Nexus] Build Success! ✅" -ForegroundColor Green
-    Write-Host "    -> Output: $PLATFORM_DIR/dist/NexusPlatform_Debug.exe" -ForegroundColor Gray
+    Write-Host "    -> Output: $ROOT_DIR/bin/debug/NexusPlatform_Debug.exe" -ForegroundColor Gray
 } else {
     Write-Error "Backend Build Failed"
 }
