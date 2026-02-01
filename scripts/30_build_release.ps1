@@ -69,7 +69,7 @@ if ($LASTEXITCODE -eq 0) {
         $VERSION = "v1.0.0"
     }
 
-    $DIST_DIR = "$PLATFORM_DIR/bin/release/NexusPlatform_$VERSION"
+    $DIST_DIR = "$ROOT_DIR/bin/release/NexusPlatform_$VERSION"
     Write-Host "`n[Nexus] Packaging into: $DIST_DIR" -ForegroundColor Cyan
 
     # 2. Prepare Directory
