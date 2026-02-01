@@ -22,6 +22,7 @@ export { default as Spinner } from './Spinner';
 export { default as Skeleton } from './Skeleton';
 export { default as Accordion } from './Accordion';
 export { default as Table } from './Table';
+export { default as TextEditor } from './TextEditor';
 export { default as ToastProvider, useToast } from './Toast';
 
 

@@ -1,7 +1,7 @@
 {
   "name": "network-analysis-platform",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@uiw/react-codemirror": "^4.25.4",
     "clsx": "^2.0.0",
     "lucide-react": "^0.294.0",
     "plotly.js": "^3.3.1",

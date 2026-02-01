@@ -3,7 +3,7 @@ import {
     Button, Input, Select, TextArea, Switch,
     Checkbox, Slider, ProgressBar, StatusIndicator,
     Tooltip, LogConsole, ConfirmModal, StatCard,
-    Badge, Tabs, Spinner, Skeleton, Accordion, Table, useToast
+    Badge, Tabs, Spinner, Skeleton, Accordion, Table, useToast, TextEditor
 } from './nexus-ui';
 import {
     LineChart, BoxChart, HeatMap, BarChart,
@@ -241,6 +241,26 @@ const DebugPanel = () => {
                         { name: 'Printer-Admin', ip: '192.168.1.100', status: 'Online' },
                         { name: 'Server-Main', ip: '10.0.0.1', status: 'Online' },
                     ]}
+                />
+            </section>
+
+            {/* Text Editor */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 border-b pb-2 dark:border-gray-700">Text Editor</h3>
+                <TextEditor
+                    label="config.json"
+                    initialValue={`{
+    "app_name": "Nexus Platform",
+    "version": "1.0.0",
+    "debug": true,
+    "features": {
+        "auto_scan": true,
+        "logging": "verbose"
+    }
+}`}
+                    language="json"
+                    onSave={(val) => addLog('Saved config: ' + val.substring(0, 20) + '...')}
+                    height="h-64"
                 />
             </section>
 
