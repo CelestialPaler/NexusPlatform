@@ -7,6 +7,7 @@ import RtpPanel from './components/RtpPanel'
 import BaPanel from './components/BaPanel'
 import WirelessCapturePanel from './components/WirelessCapturePanel'
 import ChannelAnalysisPanel from './components/ChannelAnalysisPanel'
+import ChannelAllocationTool from './components/ChannelAllocationTool'
 import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
 import DebugPanel from './components/DebugPanel'
@@ -94,12 +95,24 @@ function AppContent() {
             });
         };
 
-        // Mock loading settings
+        // Load versions and persisted settings from backend
         console.log("Loading settings...")
         if (window.pywebview) {
             window.pywebview.api.get_versions().then(v => {
                 setVersions(v)
             }).catch(err => console.error("Failed to load versions", err))
+
+            // Load persisted app settings (language, theme, display, resolution, debug)
+            window.pywebview.api.get_settings()
+                .then(s => {
+                    if (!s) return;
+                    if (s.language) setLang(s.language);
+                    if (s.theme) setTheme(s.theme);
+                    if (s.displayMode) setDisplayMode(s.displayMode);
+                    if (s.resolution) setResolution(s.resolution);
+                    if (typeof s.debugMode !== 'undefined') setDebugMode(!!s.debugMode);
+                })
+                .catch(err => console.error("Failed to load persisted settings", err));
         }
     }, [])
 
@@ -112,10 +125,23 @@ function AppContent() {
     }, [theme])
 
     // Tools that handle their own header/toolbar
-    const toolsWithCustomHeader = ['advanced-ping', 'channel-analysis', 'debug-toolbar'];
+    const toolsWithCustomHeader = ['advanced-ping', 'channel-analysis', 'channel-allocation', 'debug-toolbar'];
 
-    const handleSaveSettings = () => {
-        alert(t.saved)
+    const handleSaveSettings = async () => {
+        // Persist key settings to backend SettingsManager
+        try {
+            if (window.pywebview) {
+                await window.pywebview.api.save_setting('language', lang);
+                await window.pywebview.api.save_setting('theme', theme);
+                await window.pywebview.api.save_setting('displayMode', displayMode);
+                await window.pywebview.api.save_setting('resolution', resolution);
+                await window.pywebview.api.save_setting('debugMode', debugMode);
+            }
+            alert(t.saved)
+        } catch (e) {
+            console.error('Failed to save settings', e);
+            alert(t.save_failed || 'Failed to save settings');
+        }
     }
 
     return (
@@ -189,6 +215,7 @@ function AppContent() {
                         {activeTab === 'ba' && <BaPanel t={t} />}
                         {activeTab === 'wireless-capture' && <WirelessCapturePanel active={activeTab === 'wireless-capture'} />}
                         {activeTab === 'channel-analysis' && <ChannelAnalysisPanel t={t} />}
+                        {activeTab === 'channel-allocation' && <ChannelAllocationTool t={t} />}
                         {activeTab === 'editor' && <NodeEditor t={t} />}
                         {activeTab === 'debug' && debugMode && <DebugPanel />}
                         {activeTab === 'debug-toolbar' && debugMode && <DebugToolbarShowcase />}
