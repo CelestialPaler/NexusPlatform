@@ -2,6 +2,23 @@ import sys
 import io
 import os
 
+
+def _bootstrap_workspace_packages():
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    platform_dir = os.path.dirname(backend_dir)
+    repo_dir = os.path.dirname(platform_dir)
+    candidate_paths = [
+        os.path.join(repo_dir, 'nexus-core'),
+        os.path.join(repo_dir, 'nexus-contracts', 'src'),
+    ]
+
+    for candidate in candidate_paths:
+        if os.path.isdir(candidate) and candidate not in sys.path:
+            sys.path.insert(0, candidate)
+
+
+_bootstrap_workspace_packages()
+
 # Fix IO issues in frozen environments (PyInstaller --windowed)
 # In windowed mode, sys.stdout/stderr might be None or invalid.
 # We redirect them to a dummy stream or a log file to prevent libraries (like colorama) from crashing.
@@ -45,6 +62,7 @@ os.environ["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = "--disable-features=Access
 
 import logging
 from backend.utils.logger import setup_logger
+from backend.capabilities import get_platform_capabilities
 
 import webview
 import random
@@ -64,12 +82,17 @@ from backend.managers.iperf import IperfManager
 from backend.managers.version import VersionManager
 # from backend.managers.rtp import RtpManager
 # from backend.managers.ba import BaManager
-from backend.managers.automation import AutomationManager
 from backend.managers.wireless_capture import WirelessCaptureManager
 from backend.managers.universal import UniversalManager
 
+if sys.platform == 'win32':
+    from backend.managers.automation import AutomationManager
+else:
+    from backend.managers.automation_stub import AutomationManager
+
 class Api:
     def __init__(self):
+        self._capabilities = get_platform_capabilities()
         if getattr(sys, 'frozen', False):
             # If frozen (exe), the base dir is where the executable lives
             self.base_dir = os.path.dirname(sys.executable)
@@ -94,6 +117,9 @@ class Api:
         
         # State Tracking
         self._is_fullscreen = False
+
+    def get_capabilities(self):
+        return self._capabilities
 
     def set_window(self, window):
         """Set the global window reference."""
@@ -296,6 +322,8 @@ class Api:
 
     def is_admin(self):
         """Check if the application is running with admin privileges."""
+        if self._capabilities['features']['adminElevation'] is False:
+            return False
         try:
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
         except:
@@ -303,6 +331,9 @@ class Api:
 
     def request_admin(self):
         """Request to restart the application with admin privileges."""
+        if self._capabilities['features']['adminElevation'] is False:
+            logging.info("Admin elevation is not available on this platform.")
+            return False
         logging.info("request_admin called!")
         if self.is_admin():
             logging.info("Already admin.")
@@ -588,11 +619,15 @@ def get_entrypoint():
 
     # Running in a real app or dev environment
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_dir, 'dist', 'index.html')
+    entrypoint = os.path.join(base_dir, 'dist', 'index.html')
+    if not os.path.exists(entrypoint):
+        logging.warning("Frontend bundle not found at %s. Build frontend assets before launching the GUI.", entrypoint)
+    return entrypoint
 
 if __name__ == '__main__':
     api = Api()
     entry = get_entrypoint()
+    capabilities = api.get_capabilities()
 
     # Resolve icon path
     icon_path = os.path.join(api.base_dir, 'assets', 'icon.ico')
@@ -607,7 +642,7 @@ if __name__ == '__main__':
         js_api=api,
         width=2560,
         height=1440,
-        frameless=True  # Required for Custom TitleBar
+        frameless=capabilities['features']['customWindowChrome']
     )
 
     api.set_window(window)

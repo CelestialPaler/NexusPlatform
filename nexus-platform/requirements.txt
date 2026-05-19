@@ -1,11 +1,18 @@
 pywebview
 scapy
 pandas
+numpy
+pydantic>=2.0.0
 plotly
-pygetwindow
 pynput
 pyautogui
-pydirectinput
-pywin32
+pygetwindow; sys_platform == "win32"
+pydirectinput; sys_platform == "win32"
+pywin32; sys_platform == "win32"
+pyobjc-core; sys_platform == "darwin"
+pyobjc-framework-Cocoa; sys_platform == "darwin"
+pyobjc-framework-Quartz; sys_platform == "darwin"
+pyobjc-framework-WebKit; sys_platform == "darwin"
+pyobjc-framework-security; sys_platform == "darwin"
 paramiko
 pyinstaller
