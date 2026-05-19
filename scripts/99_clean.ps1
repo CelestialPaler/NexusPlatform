@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Clean build artifacts (dist, build, __pycache__).
+    Clean build artifacts, staging outputs, and caches.
 #>
 
 $ErrorActionPreference = "Continue"
@@ -19,15 +19,19 @@ function Remove-IfExist {
 
 Write-Host "`n[Nexus] Cleaning Artifacts..." -ForegroundColor Cyan
 
+# Clean Staging and Final Artifacts
+Remove-IfExist ".build-system"
+Remove-IfExist "artifacts"
+
 # Clean Core
 Remove-IfExist "nexus-core/build"
 Remove-IfExist "nexus-core/dist"
 Remove-IfExist "nexus-core/*.egg-info"
 
 # Clean SDK
-Remove-IfExist "nexus-sdk/build"
-Remove-IfExist "nexus-sdk/dist"
-Remove-IfExist "nexus-sdk/*.egg-info"
+Remove-IfExist "nexus-contracts/build"
+Remove-IfExist "nexus-contracts/dist"
+Remove-IfExist "nexus-contracts/*.egg-info"
 
 # Clean Platform Backend
 Remove-IfExist "nexus-platform/build"

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Compile Plugins only (nexus-core, nexus-sdk).
+    Compile plugin packages only (nexus-contracts, nexus-core).
     Actually creates wheel distributions for them.
 #>
 
@@ -35,7 +35,7 @@ function Build-Wheel {
     Set-Location "$PSScriptRoot/.."
 }
 
-Build-Wheel "nexus-sdk" "Nexus SDK"
+Build-Wheel "nexus-contracts" "Nexus Contracts"
 Build-Wheel "nexus-core" "Nexus Core"
 
 Write-Host "`n[Nexus] Plugin Compilation Complete! 📦" -ForegroundColor Green

@@ -19,52 +19,18 @@ if (Test-Path $PYTHON_ENV) {
 # Go to Root
 Set-Location "$PSScriptRoot/.."
 $ROOT_DIR = Get-Location
-$PLATFORM_DIR = "$ROOT_DIR/nexus-platform"
+$OUTPUT_DIR = "$ROOT_DIR/artifacts/windows/debug/NexusPlatform_Debug"
+$OUTPUT_EXE = "$OUTPUT_DIR/NexusPlatform_Debug.exe"
 
-# 1. Build Frontend
-Write-Host "`n[Nexus] Building Frontend..." -ForegroundColor Cyan
-Set-Location "$PLATFORM_DIR/frontend"
-if (Test-Path "node_modules") {
-    npm run build
-} else {
-    npm install
-    npm run build
-}
+Write-Host "`n[Nexus] Building windows-debug/full via unified build system..." -ForegroundColor Cyan
+& $PYTHON_EXE "$ROOT_DIR/build-system/build.py" `
+    --build-profile windows-debug `
+    --feature-profile full `
+    --execute
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Frontend Build Failed"
+    Write-Error "Unified Build Failed"
 }
 
-# 2. Build Backend (PyInstaller)
-Write-Host "`n[Nexus] Building Backend (DEBUG)..." -ForegroundColor Cyan
-Set-Location $PLATFORM_DIR
-
-# Check for Spec file, create if needed
-$SPEC_FILE = "NexusPlatform_Debug.spec"
-
-Write-Host "    -> Executing PyInstaller..." -ForegroundColor Gray
-# Note: specific command for Debug (Console=True)
-# paths: Explicitly include local source packages (nexus-core, nexus-sdk)
-& $PYTHON_EXE -m PyInstaller `
-    --name "NexusPlatform_Debug" `
-    --onefile `
-    --console `
-    --clean `
-    --distpath "../bin/debug" `
-    --workpath "build/debug" `
-    --paths "$ROOT_DIR/nexus-core" `
-    --paths "$ROOT_DIR/nexus-sdk/src" `
-    --add-data "dist;dist" `
-    --add-data "backend;backend" `
-    --add-data "config;config" `
-    --hidden-import "engineio.async_drivers.threading" `
-    --hidden-import "nexus_core" `
-    --hidden-import "nexus_sdk" `
-    run.py
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n[Nexus] Build Success! ✅" -ForegroundColor Green
-    Write-Host "    -> Output: $ROOT_DIR/bin/debug/NexusPlatform_Debug.exe" -ForegroundColor Gray
-} else {
-    Write-Error "Backend Build Failed"
-}
+Write-Host "`n[Nexus] Build Success! ✅" -ForegroundColor Green
+Write-Host "    -> Artifact: $OUTPUT_EXE" -ForegroundColor Gray

@@ -14,7 +14,7 @@ write-host "`n[Nexus] Logic: Build Debug..." -ForegroundColor Cyan
 
 # 2. Run
 write-host "`n[Nexus] Logic: Launching..." -ForegroundColor Cyan
-$EXE_PATH = "../../bin/debug/NexusPlatform_Debug.exe"
+$EXE_PATH = "../artifacts/windows/debug/NexusPlatform_Debug/NexusPlatform_Debug.exe"
 
 if (Test-Path $EXE_PATH) {
     Start-Process -FilePath $EXE_PATH -Wait

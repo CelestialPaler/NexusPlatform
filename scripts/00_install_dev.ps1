@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Setup the development environment for Nexus Platform.
-    Installs nexus-sdk, nexus-core, and platform dependencies in editable mode.
+    Installs nexus-contracts, nexus-core, and platform dependencies in editable mode.
 #>
 
 $ErrorActionPreference = "Stop"
@@ -36,8 +36,8 @@ function Install-Package {
     }
 }
 
-# 1. Install SDK
-Install-Package "nexus-sdk" "Nexus SDK"
+# 1. Install Contracts
+Install-Package "nexus-contracts" "Nexus Contracts"
 
 # 2. Install Core
 Install-Package "nexus-core" "Nexus Core"
