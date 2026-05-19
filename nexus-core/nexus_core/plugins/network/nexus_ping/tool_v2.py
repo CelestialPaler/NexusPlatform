@@ -4,6 +4,7 @@ import json
 import time
 import re
 import logging
+import sys
 from nexus_core.interfaces import ITool
 
 class PingTool(ITool):
@@ -11,6 +12,66 @@ class PingTool(ITool):
         super().__init__(base_dir)
         self.ping_processes = {}
         self.ping_threads = {}
+
+    def _build_ping_command(self, config, host):
+        cmd = ['ping']
+        is_windows = sys.platform == 'win32'
+        is_macos = sys.platform == 'darwin'
+
+        count = config.get('count')
+        if count:
+            cmd.extend(['-n' if is_windows else '-c', str(count)])
+        elif is_windows:
+            cmd.append('-t')
+
+        size = config.get('size')
+        if size:
+            cmd.extend(['-l' if is_windows else '-s', str(size)])
+
+        ttl = config.get('ttl')
+        if ttl:
+            if is_windows:
+                cmd.extend(['-i', str(ttl)])
+            elif is_macos:
+                cmd.extend(['-m', str(ttl)])
+            else:
+                cmd.extend(['-t', str(ttl)])
+
+        timeout = config.get('timeout')
+        if timeout:
+            if is_windows:
+                cmd.extend(['-w', str(timeout)])
+            elif is_macos:
+                cmd.extend(['-W', str(timeout)])
+            else:
+                # Linux ping uses seconds here; keep integer seconds to avoid invalid millisecond values.
+                cmd.extend(['-W', str(max(1, int(timeout / 1000)))])
+
+        if config.get('fragment') and is_windows:
+            cmd.append('-f')
+        if config.get('resolve') and is_windows:
+            cmd.append('-a')
+        if config.get('ipVersion') == '4':
+            cmd.append('-4')
+        elif config.get('ipVersion') == '6':
+            cmd.append('-6')
+
+        cmd.append(host)
+        return cmd
+
+    def _build_latency_regex(self):
+        return r"time\s*[=<]?\s*(\d+(?:\.\d+)?)\s*ms"
+
+    def _is_timeout_line(self, line):
+        lowered = line.lower()
+        timeout_markers = [
+            'request timed out',
+            'destination host unreachable',
+            'request timeout',
+            '100.0% packet loss',
+            '100% packet loss',
+        ]
+        return any(marker in lowered for marker in timeout_markers)
 
     def get_metadata(self):
         return {
@@ -56,53 +117,28 @@ class PingTool(ITool):
         if instance_id in self.ping_processes:
             return {"status": "error", "message": "Ping instance already running"}
 
-        # Build command (Windows specific)
-        cmd = ['ping']
-        
-        # Count vs Continuous
-        if config.get('count'):
-            cmd.extend(['-n', str(config.get('count'))])
-        else:
-            cmd.append('-t')
-        
-        # Add optional parameters
-        if config.get('size'):
-            cmd.extend(['-l', str(config.get('size'))])
-        if config.get('ttl'):
-            cmd.extend(['-i', str(config.get('ttl'))])
-        if config.get('timeout'):
-            cmd.extend(['-w', str(config.get('timeout'))])
-        if config.get('fragment'):
-            cmd.append('-f')
-        if config.get('resolve'):
-            cmd.append('-a')
-        if config.get('ipVersion') == '4':
-            cmd.append('-4')
-        elif config.get('ipVersion') == '6':
-            cmd.append('-6')
-            
-        cmd.append(host)
+        cmd = self._build_ping_command(config, host)
         
         def run_thread():
             logging.info(f"Ping thread started for {instance_id}")
             try:
-                # Use CREATE_NO_WINDOW (0x08000000) to prevent console window flashing/blocking
-                creationflags = 0x08000000
-                
                 logging.info(f"Executing command: {cmd}")
-                process = subprocess.Popen(
-                    cmd, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True,
-                    creationflags=creationflags,
-                    bufsize=1
-                )
+                popen_kwargs = {
+                    'args': cmd,
+                    'stdout': subprocess.PIPE,
+                    'stderr': subprocess.STDOUT,
+                    'universal_newlines': True,
+                    'bufsize': 1,
+                }
+                if sys.platform == 'win32':
+                    # Prevent an extra console window on Windows.
+                    popen_kwargs['creationflags'] = 0x08000000
+
+                process = subprocess.Popen(**popen_kwargs)
                 self.ping_processes[instance_id] = process
                 logging.info(f"Process started with PID {process.pid}")
 
-                # Regex for parsing time (Windows: time=XXms or time<1ms)
-                regex = r"time[=<](\d+)ms"
+                regex = self._build_latency_regex()
                 
                 for line in iter(process.stdout.readline, ''):
                     if not line: break
@@ -114,14 +150,14 @@ class PingTool(ITool):
                     # Parse for chart
                     match = re.search(regex, line)
                     if match:
-                        latency = int(match.group(1))
+                        latency = round(float(match.group(1)), 2)
                         data_point = {
                             "timestamp": time.strftime('%H:%M:%S'),
                             "latency": latency
                         }
                         if callback:
                             callback('ping-data', {'id': instance_id, 'data': data_point})
-                    elif "Request timed out" in line or "Destination host unreachable" in line:
+                    elif self._is_timeout_line(line):
                          # Handle packet loss/timeout
                          data_point = {
                             "timestamp": time.strftime('%H:%M:%S'),

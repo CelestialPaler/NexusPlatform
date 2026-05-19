@@ -2,7 +2,7 @@ import platform
 import subprocess
 import re
 from typing import Dict, Any
-from nexus_sdk import nexus_node, NXPath, NXTable, NexusPluginError
+from nexus_contracts import NXPath, NXTable, NexusPluginError, nexus_node
 
 @nexus_node(
     id="nexus.tools.ping",
