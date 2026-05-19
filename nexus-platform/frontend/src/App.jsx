@@ -7,7 +7,6 @@ import RtpPanel from './components/RtpPanel'
 import BaPanel from './components/BaPanel'
 import WirelessCapturePanel from './components/WirelessCapturePanel'
 import ChannelAnalysisPanel from './components/ChannelAnalysisPanel'
-import ChannelAllocationTool from './components/ChannelAllocationTool'
 import ToolsPanel from './components/ToolsPanel'
 import AutomationPanel from './components/AutomationPanel'
 import DebugPanel from './components/DebugPanel'
@@ -34,6 +33,17 @@ function AppContent() {
     const [lang, setLang] = useState('en')
     const { theme, setTheme } = useTheme()
     const [debugMode, setDebugMode] = useState(false)
+    const [capabilities, setCapabilities] = useState({
+        platform: 'unknown',
+        features: {
+            automation: true,
+            customWindowChrome: true,
+            adminElevation: true,
+            wirelessCaptureLocalControl: true,
+            wirelessCaptureRemoteControl: true,
+            toolMultiWindow: true,
+        },
+    })
 
     // UI Structure State
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -98,6 +108,17 @@ function AppContent() {
         // Load versions and persisted settings from backend
         console.log("Loading settings...")
         if (window.pywebview) {
+            window.pywebview.api.get_capabilities()
+                .then(data => {
+                    if (data) {
+                        setCapabilities(data)
+                        if (!data.features?.automation) {
+                            setActiveTab(current => current === 'automation' ? 'tools' : current)
+                        }
+                    }
+                })
+                .catch(err => console.error("Failed to load capabilities", err))
+
             window.pywebview.api.get_versions().then(v => {
                 setVersions(v)
             }).catch(err => console.error("Failed to load versions", err))
@@ -125,7 +146,7 @@ function AppContent() {
     }, [theme])
 
     // Tools that handle their own header/toolbar
-    const toolsWithCustomHeader = ['advanced-ping', 'channel-analysis', 'channel-allocation', 'debug-toolbar'];
+    const toolsWithCustomHeader = ['advanced-ping', 'channel-analysis', 'debug-toolbar'];
 
     const handleSaveSettings = async () => {
         // Persist key settings to backend SettingsManager
@@ -146,10 +167,12 @@ function AppContent() {
 
     return (
         <div className="flex flex-col h-screen w-screen bg-gray-900 text-white transition-colors duration-300 overflow-hidden">
-            <TitleBar
-                isFullscreen={displayMode === 'fullscreen'}
-                onMaximizeToggle={handleMaximizeToggle}
-            />
+            {capabilities.features?.customWindowChrome && (
+                <TitleBar
+                    isFullscreen={displayMode === 'fullscreen'}
+                    onMaximizeToggle={handleMaximizeToggle}
+                />
+            )}
 
             <div className="flex flex-1 overflow-hidden relative">
                 {!isStandalone && (
@@ -163,10 +186,12 @@ function AppContent() {
                                 <Wrench className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && (t.tools || 'Tools')}
                             </button>
-                            <button onClick={() => setActiveTab('automation')} title={t.automation} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'automation' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                                <PlayCircle className={isSidebarCollapsed ? '' : 'mr-3'} />
-                                {!isSidebarCollapsed && (t.automation || 'Automation')}
-                            </button>
+                            {capabilities.features?.automation && (
+                                <button onClick={() => setActiveTab('automation')} title={t.automation} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'automation' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                                    <PlayCircle className={isSidebarCollapsed ? '' : 'mr-3'} />
+                                    {!isSidebarCollapsed && (t.automation || 'Automation')}
+                                </button>
+                            )}
                             <button onClick={() => setActiveTab('editor')} title={t.nodeEditor} className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'editor' ? 'bg-blue-600' : 'hover:bg-gray-800 text-gray-400 hover:text-white'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
                                 <Network className={isSidebarCollapsed ? '' : 'mr-3'} />
                                 {!isSidebarCollapsed && t.nodeEditor}
@@ -207,7 +232,7 @@ function AppContent() {
                     )}
                     <main className={`flex-1 ${isStandalone ? 'p-0' : (toolsWithCustomHeader.includes(activeTab) ? 'p-0' : 'p-6')} overflow-auto h-full`}>
                         {activeTab === 'tools' && <ToolsPanel t={t} onSelectTool={setActiveTab} />}
-                        {activeTab === 'automation' && <AutomationPanel t={t} />}
+                        {activeTab === 'automation' && capabilities.features?.automation && <AutomationPanel t={t} />}
                         {activeTab === 'iperf' && <IperfPanel t={t} />}
                         {activeTab === 'ping' && <PingPanel t={t} />}
                         {activeTab === 'advanced-ping' && <AdvancedPingPanel t={t} />}
@@ -215,7 +240,6 @@ function AppContent() {
                         {activeTab === 'ba' && <BaPanel t={t} />}
                         {activeTab === 'wireless-capture' && <WirelessCapturePanel active={activeTab === 'wireless-capture'} />}
                         {activeTab === 'channel-analysis' && <ChannelAnalysisPanel t={t} />}
-                        {activeTab === 'channel-allocation' && <ChannelAllocationTool t={t} />}
                         {activeTab === 'editor' && <NodeEditor t={t} />}
                         {activeTab === 'debug' && debugMode && <DebugPanel />}
                         {activeTab === 'debug-toolbar' && debugMode && <DebugToolbarShowcase />}
