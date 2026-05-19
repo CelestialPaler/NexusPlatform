@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "tools": {
+    "iperf3": {
+      "windows": {
+        "version": "3.x",
+        "assets": [
+          "tools/iperf/windows/iperf3.exe"
+        ]
+      }
+    },
+    "iperf2": {
+      "windows": {
+        "version": "2.2.1",
+        "assets": [
+          "tools/iperf/windows/iperf-2.2.1-win64.exe",
+          "tools/iperf/windows/cygwin1.dll"
+        ]
+      }
+    }
+  }
+}
