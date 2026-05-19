@@ -1,0 +1,35 @@
+{
+  "name": "windows-debug",
+  "applicationName": "NexusPlatform_Debug",
+  "artifactNameTemplate": "NexusPlatform_Debug",
+  "entryPoint": "nexus-platform/run.py",
+  "targetOs": "windows",
+  "allowedHostOs": [
+    "windows"
+  ],
+  "packaging": {
+    "format": "exe",
+    "mode": "one-file",
+    "console": true
+  },
+  "artifacts": {
+    "baseDir": "artifacts/windows/debug"
+  },
+  "resources": {
+    "bundleDirs": [
+      "config",
+      "tools"
+    ],
+    "createDirs": [
+      "logs"
+    ]
+  },
+  "signing": {
+    "enabled": false
+  },
+  "includeDebugInfo": true,
+  "bundledTools": [
+    "iperf3",
+    "iperf2"
+  ]
+}

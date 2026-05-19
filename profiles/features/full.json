@@ -1,0 +1,21 @@
+{
+  "name": "full",
+  "description": "Full capability profile for the primary platform target.",
+  "features": {
+    "automation": true,
+    "wirelessCaptureLocal": true,
+    "wirelessCaptureRemote": true,
+    "customWindowChrome": true,
+    "toolMultiWindow": true
+  },
+  "externalDependencies": {
+    "ping": "system",
+    "iperf3": "bundled",
+    "tshark": "external",
+    "tcpdump": "remote"
+  },
+  "uiVisibility": {
+    "automation": "enabled",
+    "wirelessCapture": "enabled"
+  }
+}

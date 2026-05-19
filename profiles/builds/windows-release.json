@@ -1,0 +1,36 @@
+{
+  "name": "windows-release",
+  "applicationName": "NexusPlatform",
+  "artifactNameTemplate": "NexusPlatform_v{appVersion}",
+  "entryPoint": "nexus-platform/run.py",
+  "targetOs": "windows",
+  "allowedHostOs": [
+    "windows"
+  ],
+  "packaging": {
+    "format": "exe",
+    "mode": "one-file",
+    "console": false
+  },
+  "artifacts": {
+    "baseDir": "artifacts/windows/release"
+  },
+  "resources": {
+    "bundleDirs": [
+      "config",
+      "data",
+      "tools"
+    ],
+    "createDirs": [
+      "logs"
+    ]
+  },
+  "signing": {
+    "enabled": true
+  },
+  "includeDebugInfo": false,
+  "bundledTools": [
+    "iperf3",
+    "iperf2"
+  ]
+}

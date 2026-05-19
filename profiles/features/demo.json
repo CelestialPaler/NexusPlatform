@@ -1,0 +1,21 @@
+{
+  "name": "demo",
+  "description": "Reduced capability profile for demos and cross-platform safe validation.",
+  "features": {
+    "automation": false,
+    "wirelessCaptureLocal": false,
+    "wirelessCaptureRemote": true,
+    "customWindowChrome": false,
+    "toolMultiWindow": true
+  },
+  "externalDependencies": {
+    "ping": "system",
+    "iperf3": "bundled",
+    "tshark": "external",
+    "tcpdump": "remote"
+  },
+  "uiVisibility": {
+    "automation": "hidden",
+    "wirelessCapture": "limited"
+  }
+}

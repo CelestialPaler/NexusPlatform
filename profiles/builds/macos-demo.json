@@ -1,0 +1,36 @@
+{
+  "name": "macos-demo",
+  "applicationName": "NexusPlatform",
+  "artifactNameTemplate": "NexusPlatform_Demo_v{appVersion}",
+  "entryPoint": "nexus-platform/run.py",
+  "targetOs": "macos",
+  "allowedHostOs": [
+    "macos"
+  ],
+  "packaging": {
+    "format": "app",
+    "mode": "one-folder",
+    "console": false
+  },
+  "artifacts": {
+    "baseDir": "artifacts/macos/demo"
+  },
+  "resources": {
+    "bundleDirs": [
+      "config",
+      "tools"
+    ],
+    "createDirs": [
+      "logs"
+    ]
+  },
+  "signing": {
+    "enabled": false,
+    "adHoc": true,
+    "sanitizeExtendedAttributes": true
+  },
+  "includeDebugInfo": true,
+  "bundledTools": [
+    "iperf3"
+  ]
+}
