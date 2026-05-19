@@ -1,84 +1,125 @@
 # Nexus 版本管理与兼容性策略
 
-> **生效日期**: 2026-01-27
-> **适用范围**: Nexus Core, Nexus Platform, All Plugins
+> 文档状态: Active
+> 生效日期: 2026-04-20
+> 适用范围: 仓库根目录、`nexus-platform`、`nexus-core`、`nexus-contracts`、构建与发布流程
+> 说明: 本文已按当前仓库治理基线更新，用于定义现阶段可执行的版本事实源与同步规则。
 
-为了管理各组件独立演进带来的兼容性挑战，我们采用 **语义化版本 (SemVer)** + **API Level 契约** 的混合管理模式。
+## 1. 文档定位
 
-## 1. 版本架构 (Versioning Architecture)
+本文只回答当前阶段最核心的四个问题：
 
-系统由三个独立演进的实体组成，它们拥有各自的版本号。
+1. 产品版本看哪里。
+2. 子包版本看哪里。
+3. 哪些字段是当前事实源。
+4. 在统一版本系统落地前，哪些规则必须先稳定执行。
 
-### 1.1 Nexus Core (内核)
-*   **变量**: `nexus_core.__version__`
-*   **角色**: **API 提供者 (Provider)**。
-*   **规则**:
-    *   **Major (X.y.z)**: 破坏性变更 (如 `ITool` 接口签名修改)。
-    *   **Minor (x.Y.z)**: 向下兼容的新特性 (如新增 `BaseManager` 方法)。
-    *   **Patch (x.y.Z)**: 内部 Bug 修复。
+当前不再沿用“Platform 版本看前端 `package.json`”作为产品版本事实源的说法。
 
-### 1.2 Nexus Platform (宿主)
-*   **变量**: `package.json` (version)
-*   **角色**: **集成者 (Integrator)**。
-*   **规则**:
-    *   通常与 Core 的 Minor 版本保持步调，但 Patch 版本独立。
-    *   **Runtime Check**: Platform 启动时会打印 `Loaded Core vX.Y.Z`。
+## 2. 当前版本分层
 
-### 1.3 Tools (插件)
-*   **变量**: `get_metadata()["version"]`
-*   **角色**: **消费者 (Consumer)**。
-*   **规则**: 独立演进。Ping 工具可以升级到 v5.0，而 Core 仍停留在 v1.0，只要**所需接口**未变。
+当前仓库中的版本应分成三类理解，而不是混成一个数字。
 
-## 2. 兼容性握手 (Compatibility Handshake)
+### 2.1 产品版本
 
-为了防止版本不匹配导致的运行时崩溃，所有工具必须在元数据中声明对 Core 的依赖。
+- **事实源**: `nexus-platform/config/versions.json` 中的 `app`
+- **用途**: 面向最终桌面产品、构建产物、产物目录与构建 manifest
+- **当前值**: `1.7.0`
 
-### 2.1 声明依赖 (Manifest)
-在 `tool.py` 的 `get_metadata` 中新增 `engines` 字段：
+这代表“当前交付给用户的 Nexus 产品版本”，而不是某个单独 Python 包或前端包的内部版本。
 
-```python
-def get_metadata(self):
-    return {
-        "name": "Super Ping",
-        "version": "2.1.0",         # 工具本身的版本
-        "engines": {
-            "nexus_core": ">=1.5.0" # 依赖的最低内核版本
-        }
-    }
-```
+### 2.2 Python 包版本
 
-### 2.2 运行时检查 (Runtime Guard)
-**Manager 层**在加载工具时必须执行以下逻辑：
+- `nexus-core`: 以 `nexus-core/setup.py` 中的 `version` 为准
+- `nexus-contracts`: 以 `nexus-contracts/pyproject.toml` 中的 `project.version` 为准
 
-1.  读取 Tool Metadata。
-2.  解析 `engines.nexus_core` 表达式。
-3.  获取当前环境的 `nexus_core.__version__`。
-4.  **判定**:
-    *   **Pass**: 加载工具。
-    *   **Fail**: 标记工具为 `Incompatible` (灰色不可点)，并在 UI 显示 "Requires Core v1.5+"。
+这两个版本用于描述包级发布或内部依赖演进，不等同于产品版本。
 
-## 3. GUI 与 Standalone 的同步
+### 2.3 前端包版本
 
-由于 Platform (React) 需要根据 Metadata 渲染 UI，这里存在隐式依赖：
+- 前端 `package.json` / lockfile 中的版本仅用于前端工程自身元数据和依赖生态上下文
+- 当前阶段 **不将其视为产品版本事实源**
 
-*   **UI Schema Versioning**:
-    *   如果 Core 引入了新的输入类型 (例如 `type: "date-picker"`), 只有新版 Platform 才能渲染它。
-    *   **解决方案**: Metadata 中增加 `ui_schema_version`。
-    *   React 前端检查：如果遇到不支持的 UI 类型，降级渲染为文本框或提示升级。
+## 3. 当前事实源规则
 
-## 4. 发布与 Git 标签 (Release Strategy)
+在统一版本注入体系完全落地前，现阶段必须遵守以下临时基线。
 
-### 4.1 Monorepo Tagging
-由于我们在单体仓库中，建议使用 **前缀标签** 区分不同实体的发布：
+### 3.1 产品版本单一事实源
 
-*   **平台发布**: `v1.5.0` (默认标签，代表整个集成包)
-*   **核心发布**: `core-v1.5.0` (仅当 nexus-core 独立发布 PyPI 包时)
-*   **工具发布**: `tool-ping-v2.1.0` (仅当工具发生重大变更需标记时)
+1. 产品版本只认 `nexus-platform/config/versions.json` 的 `app`。
+2. 构建系统读取产品版本时，必须优先从该文件获取。
+3. 文档中提到“当前版本”时，必须明确是在说产品版本还是包版本。
 
-### 4.2 CHANGELOG 维护
-*   **Global CHANGELOG**: 根目录下的 CHANGELOG 记录 Platform 的用户可见变更。
-*   **Core CHANGELOG**: `nexus-core/CHANGELOG.md` 记录 API 变更（给工具开发者看）。
+### 3.2 子包版本各自维护
 
-## 5. 灾难恢复
-如果出现版本严重不匹配（如 Platform v2.0 加载了 v1.0 的旧代码）：
-*   **Safe Mode**: Platform 启动时若捕获到 `ImportError` 或 `AttributeError`，应自动禁用对应插件，而不是闪退。
+1. `nexus-core` 继续在自身打包元数据中维护版本。
+2. `nexus-contracts` 继续在自身打包元数据中维护版本。
+3. 后续如新增可发布子包，不得再随意引入新的平行产品版本源。
+
+### 3.3 禁止新增第四套产品版本口径
+
+以下位置可以存在工程元数据版本，但不得再被定义为“真正产品版本”：
+
+1. 前端 `package.json`
+2. 单个工具 metadata
+3. README 中的手写版本说明
+4. 构建脚本中的硬编码版本号
+
+## 4. 版本同步规则
+
+### 4.1 何时必须更新产品版本
+
+以下情形应更新 `versions.json` 中的 `app`：
+
+1. 对外发布新版本产物
+2. 引入对用户可见的重要功能变更
+3. 修复需要独立发布说明的用户可见问题
+
+### 4.2 何时只更新包版本
+
+以下情形可以只更新包版本，而不必立即提升产品版本：
+
+1. `nexus-core` 内部 API 或实现演进，但尚未形成新的产品发布
+2. `nexus-contracts` 的契约层演进，但尚未形成新的产品发布
+3. 仅内部构建或测试辅助变更
+
+### 4.3 构建输出必须带出产品版本
+
+当前构建系统应继续遵循以下方向：
+
+1. 从 `versions.json` 读取产品版本
+2. 将版本写入产物目录名或 manifest
+3. 避免在打包脚本中手写另一套版本字符串
+
+## 5. 兼容性与运行时检查
+
+当前阶段先做“解释清楚版本来源”，不急于一次性实现复杂的跨层版本握手系统。
+
+但原则上应保留以下方向：
+
+1. 工具元数据可以声明自身版本。
+2. 后续如确实需要跨层能力握手，应在 `nexus-contracts` 或稳定 metadata 结构中定义。
+3. 运行时遇到不兼容或导入失败时，应优先降级、禁用或显式告警，而不是直接导致 GUI 闪退。
+
+## 6. 标签与发布建议
+
+当前仓库已是 monorepo，因此标签策略也应区分“产品发布”和“子包发布”。
+
+建议保留以下约定：
+
+1. 产品发布标签使用 `vX.Y.Z`
+2. `nexus-core` 独立发布时使用 `core-vX.Y.Z`
+3. `nexus-contracts` 独立发布时使用 `contracts-vX.Y.Z`
+
+当前阶段如无独立对子包发版的实际动作，不必为了“形式完整”频繁打包级标签。
+
+## 7. 当前治理结论
+
+现阶段版本治理的核心不是“设计最完美的版本宇宙”，而是先阻止版本事实源继续漂移。
+
+因此本阶段的明确结论是：
+
+1. 产品版本以 `nexus-platform/config/versions.json` 为准。
+2. `nexus-core` 与 `nexus-contracts` 继续各自维护包版本。
+3. 前端工程版本不再承担产品版本事实源角色。
+4. 后续 CI、构建与文档都应围绕这套口径继续收敛。

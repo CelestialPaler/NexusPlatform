@@ -1,16 +1,31 @@
 # Nexus Core API 参考手册
 
-> **最后更新**: 2026-01-27
-> **适用版本**: Nexus v1.5+
+> 文档状态: Draft
+> 文档角色: 核心层 API 与插件模型参考
+> 适用范围: `nexus-core`、`nexus-contracts`、插件开发与工具实现
+> 最后更新: 2026-04-21
+> 说明: 本文档已按当前仓库结构补充状态说明，但内容仍保留部分旧插件模型表述，后续需继续与真实代码和契约边界对齐。
 
-Nexus Core 是系统的纯逻辑引擎，它不包含任何 React、WebView 或 Windows GUI 的相关代码。
+Nexus Core 是系统的逻辑实现层，它不负责 React 界面、pywebview 宿主或平台专属桌面壳逻辑。
+
+当前阶段应这样理解它的边界：
+
+1. `nexus-core` 负责工具实现、分析逻辑和运行时能力。
+2. `nexus-contracts` 负责共享类型、装饰器和通用异常等公共契约。
+3. `nexus-platform` 负责桌面宿主、前后端桥接和交互呈现。
+
+如果本文档与当前仓库治理基线冲突，应优先以 `docs/00-设计概要.md` 和 `docs/development/11-Repository_Governance_Baseline.md` 为准。
 
 ## ITool 接口规范
 
-所有插件（如 Ping, Iperf, DNS 等）都必须实现 `ITool` 接口。
+当前代码中，工具运行时接口 `ITool` 仍定义在：
+
+1. `nexus-core/nexus_core/interfaces.py`
+
+所有走当前运行时工具模型的插件（如 Ping、iPerf 等）都应围绕该接口实现。
 
 ### get_metadata
-返回工具的元数据模式 (Schema)。这将驱动可视化编辑器 (Visual Editor) 中的节点生成与 UI 渲染。
+返回工具的元数据模式（Schema）。这类元数据会影响工具描述、输入输出约束和上层界面或运行时的消费方式。
 
 **代码示例**:
 ```python
@@ -29,6 +44,7 @@ Nexus Core 是系统的纯逻辑引擎，它不包含任何 React、WebView 或 
 ```
 
 ### run
+
 执行工具的主要逻辑。
 
 *   **config**: 字典类型，必须匹配 metadata 中定义的 `inputs` 结构。
@@ -39,11 +55,16 @@ Nexus Core 是系统的纯逻辑引擎，它不包含任何 React、WebView 或 
 **注意**: 严禁在 `run()` 中阻塞主线程执行耗时任务。请使用线程 (threading) 或子进程 (subprocess)，并通过 `callback` 异步报告结果。
 
 ### stop
+
 清理资源，终止正在运行的工具实例。
 
 ## 插件目录结构
 
-插件统一存放于 `nexus-core/nexus_core/plugins/` 目录下。
+当前插件主要位于：
+
+1. `nexus-core/nexus_core/plugins/`
+
+现阶段这是逻辑层能力的主要组织目录，但并不意味着未来所有契约都继续放在 `nexus-core` 内部。
 
 ```text
 nexus_core/
@@ -55,6 +76,8 @@ nexus_core/
 ```
 
 ## 数据类型定义
+
+如果插件或节点实现需要共享类型、装饰器或异常，应优先查看 `nexus-contracts` 中的公共定义，而不是在工具实现里重复发明一套平行结构。
 
 在 `inputs` 中支持以下通用数据类型：
 

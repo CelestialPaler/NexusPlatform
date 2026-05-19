@@ -1,5 +1,8 @@
 # AI 助手行动准则
 
+> 文档状态: Proposal
+> 说明: 本文保留历史 AI 行动哲学，现阶段不再作为主指引；AI 的当前工作边界以 `.github/copilot-instructions.md` 和仓库治理总纲为准。
+
 > **目标受众**: GitHub Copilot, Windsurf, Cline 及其他 AI 编程助手。
 > **核心目标**: 维持代码库的熵值为绝对零度。
 
