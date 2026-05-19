@@ -32,12 +32,17 @@ wheels/
 *.egg
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea/
 *.swp
 
 # Nexus Specific
 temp/
 reports/
+.build-system/
+artifacts/
+docs/development/*.local.md
 
 bin/

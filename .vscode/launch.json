@@ -1,0 +1,52 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 标准启动：用 Python debugger 附加断点，加载已构建的前端 dist
+      "name": "启动应用",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nexus-platform/run.py",
+      "cwd": "${workspaceFolder}/nexus-platform",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      // 开发热重载模式：前端走 Vite dev server（localhost:5173），需先手动运行
+      // Task "前端: 启动开发服务器"，或使用下方 compound 配置一键启动
+      "name": "启动应用 (开发热重载)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nexus-platform/run.py",
+      "cwd": "${workspaceFolder}/nexus-platform",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "NEXUS_DEV_MODE": "true"
+      }
+    },
+    {
+      // 通过 Task 先启动 Vite，再以调试模式启动应用
+      "name": "启动应用 (开发热重载, 含 Vite 服务器)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nexus-platform/run.py",
+      "cwd": "${workspaceFolder}/nexus-platform",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "NEXUS_DEV_MODE": "true"
+      },
+      "preLaunchTask": "前端: 启动开发服务器"
+    },
+    {
+      // 调试任意当前 Python 文件（通用）
+      "name": "Python: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

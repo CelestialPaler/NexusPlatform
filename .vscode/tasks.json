@@ -1,0 +1,197 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ────────────────────────────────────────────────
+    // 依赖安装
+    // ────────────────────────────────────────────────
+    {
+      "label": "安装依赖: 前端",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform/frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "安装依赖: Python",
+      "type": "shell",
+      "command": "pip3 install -r requirements.txt",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "安装依赖: 全部",
+      "dependsOn": ["安装依赖: 前端", "安装依赖: Python"],
+      "dependsOrder": "parallel",
+      "group": "build",
+      "problemMatcher": []
+    },
+
+    // ────────────────────────────────────────────────
+    // 前端
+    // ────────────────────────────────────────────────
+    {
+      "label": "前端: 构建 (vite build)",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform/frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      // 热重载开发服务器，配合 NEXUS_DEV_MODE=true 使用
+      "label": "前端: 启动开发服务器",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform/frontend"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*VITE",
+          "endsPattern": "^.*Local:.*http://localhost"
+        }
+      }
+    },
+
+    // ────────────────────────────────────────────────
+    // 应用启动
+    // ────────────────────────────────────────────────
+    {
+      // 直接用 Python 启动 GUI（需提前 vite build）
+      "label": "启动应用",
+      "type": "shell",
+      "command": "python3 run.py",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      // 前端热重载模式：先启动 Vite dev server，再以 NEXUS_DEV_MODE=true 启动应用
+      "label": "启动应用 (开发热重载)",
+      "type": "shell",
+      "command": "NEXUS_DEV_MODE=true python3 run.py",
+      "options": {
+        "cwd": "${workspaceFolder}/nexus-platform"
+      },
+      "dependsOn": ["前端: 启动开发服务器"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+
+    // ────────────────────────────────────────────────
+    // 打包
+    // ────────────────────────────────────────────────
+    {
+      // macOS Demo 包（单 .app，ad-hoc 签名）
+      "label": "打包: macOS Demo",
+      "type": "shell",
+      "command": "python3 build-system/build.py --build-profile macos-demo --feature-profile demo --execute",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      // 需在 Windows 主机上执行；macOS 上运行会因 target OS 不匹配而失败
+      "label": "打包: Windows Debug",
+      "type": "shell",
+      "command": "python3 build-system/build.py --build-profile windows-debug --feature-profile full --execute",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      // 需在 Windows 主机上执行；macOS 上运行会因 target OS 不匹配而失败
+      "label": "打包: Windows Release",
+      "type": "shell",
+      "command": "python3 build-system/build.py --build-profile windows-release --feature-profile full --execute",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      // 仅验证 build plan，不实际执行打包（任意平台均可运行）
+      "label": "打包: 预览计划 (macOS Demo)",
+      "type": "shell",
+      "command": "python3 build-system/build.py --build-profile macos-demo --feature-profile demo",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
